@@ -1,0 +1,61 @@
+# Site settings 配置站点
+title: 'xsyr的独立博客'
+description: '经验源于爱折腾, 喜欢折腾各种新鲜玩意儿。'
+keyword: 'C/C++, Lua, Go, Linux, IoT, 硬件.'
+url: 'http://xsyr.github.io' # your host
+baseurl: '/'
+
+# Navigation links
+nav:
+  home: '/'
+  tags: '/tags.html'
+
+# Author 配置博主信息
+author: '黄成林'
+nickname: '立方'
+bio: '后端开发者，热爱技术，简单爱折腾'
+avatar: 'assets/img/profile.jpg'
+
+# Search
+search: true
+
+# Night mode
+nightMode: true
+
+# Comments
+disqus: false
+disqus_url: 'https://xinsuiyuer.disqus.com/embed.js'
+
+# Share
+social-share: true
+social-share-items: ['wechat', 'weibo', 'douban', 'twitter']
+
+# theme color 主题皮肤
+theme-color: 'default'  # pink or default
+
+# Post header background patterns (when the post no cover): circuitBoard, overlappingCircles, food, glamorous, ticTacToe, seaOfClouds
+postPatterns: 'circuitBoard'
+
+# SNS settings 配置社交网站url: weibo, zhihu, twitter, instagram, juejin, github, douban, facebook, dribble, uicn, jianshu, medium, linkedin
+sns:
+  github: '//github.com/xsyr'
+
+# Tags 设置标签
+recommend-tags: true # whether or not display recommend-tags on the sidebar
+recommend-condition-size: 12 # a tag will be recommended if the size of it is more than this value
+
+# Build settings
+paginate: 6
+paginate_path: 'page:num'
+exclude: ['node_modules', 'dev', 'package.json', 'gulpfile.js', '.gitignore', 'README.md']
+
+# Markdown
+markdown: kramdown
+highlighter: rouge
+kramdown:
+  input: GFM
+
+RSS: false
+
+# Plugins
+plugins: [jekyll-paginate]
