@@ -24,7 +24,8 @@ nightMode: false
 
 # Comments
 disqus: false
-disqus_url: 'https://xinsuiyuer.disqus.com/embed.js'
+#disqus_url: 'https://xinsuiyuer.disqus.com/embed.js'
+disqus_url: '#'
 
 # Share
 social-share: true
