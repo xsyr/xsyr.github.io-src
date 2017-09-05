@@ -2,8 +2,8 @@
 title: 'xsyr的独立博客'
 description: '经验源于爱折腾, 喜欢折腾各种新鲜玩意儿。'
 keyword: 'C/C++, Lua, Go, Linux, IoT, 硬件.'
-url: 'http://xsyr.github.io' # your host
-baseurl: '/'
+url: 'https://xsyr.github.io' # your host
+baseurl: 'https://xsyr.github.io/'
 
 # Navigation links
 nav:
