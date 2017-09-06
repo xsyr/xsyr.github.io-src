@@ -1,0 +1,28 @@
+---
+layout: post
+title: "miXpkg - DEB 打包程序"
+date: 2014-01-05 16:08
+comments: true
+categories: Linux
+---
+
+在使用 Raspberry Pi 时，有时候需要安装从源码编译的软件，但有时又不能直接在 RPi 上
+直接编译，那只能通过交叉编译环境先编译再上传到 RPi 上运行。可以将整个 --prefix
+指定的文件夹直接上传，但这样不好管理。因此就写了这个小程序，它使用 inotify 机制，
+监视 sysroot 文件夹，将所有新增的文件和
+文件夹拷贝到一个临时目录中，然后创建 DEBIAN 文件夹，生成 Control 文件，并使用
+制定的编辑器打开待编辑好后再运行 dpkg -b 生成 deb安装包，这样就可以方便的使用
+apt-get 对软件包进行管理。
+
+------------
+
+使用方法：对源码进行 make 之后，使用 miXpkg 代替 make install，miXpkg 会先启用一个
+线程监视安装目录，然后再执行 make install 命令。
+
+```shell
+$ make
+$ miXpkg -s /path/to/sysroot -o /path/to/place/copied/installed/files -n package-name [args pass to make, e.g. install var1=val1]
+```
+这样就会在 /path/to/place/copied/installed/ 下生成 package-name.deb 安装包。
+
+[miXpkg 源码](https://github.com/xinsuiyuer/miXpkg)

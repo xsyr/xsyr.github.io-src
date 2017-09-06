@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>libpcap 源码简析 - xsyr的独立博客</title>
+    <meta name="author"  content="黄成林">
+    <meta name="description" content="libpcap 源码简析">
+    <meta name="keywords"  content="">
+    <!-- Open Graph -->
+    <meta property="og:title" content="libpcap 源码简析 - xsyr的独立博客">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://xsyr.github.io/programming/c/2014/01/10/libpcap-source-view.html">
+    <meta property="og:description" content="经验源于爱折腾, 喜欢折腾各种新鲜玩意儿。">
+    <meta property="og:site_name" content="xsyr的独立博客">
+    <link rel="shortcut icon" href="/assets/img/favicon.ico">
+    <link rel="stylesheet" href="//cdn.staticfile.org/normalize/6.0.0/normalize.min.css">
+    <link rel="stylesheet" href="//at.alicdn.com/t/font_roc50gemkxpw4s4i.css">
+    <link rel="stylesheet" href="/assets/css/github-markdown.css">
+    <link rel="stylesheet" href="/assets/css/prism.css">
+    <link rel="stylesheet" href="/assets/css/share.min.css">
+    <link rel="stylesheet" href="/assets/css/app.min.css">
+</head>
+<body>
+    <!--[if lt IE 10]>
+<div class="alert-danger" role="alert">你的浏览器实在太太太旧了，放学别走，升级完浏览器再说！<a target="_blank" class="alert-link" href="http://browsehappy.com">立即升级</a></div>
+<![endif]-->
+<input id="nm-switch" type="hidden" value="false">
+
+<header class="g-header">
+    <div class="g-logo">
+        <a href="/"></a>
+    </div>
+    <i id="menu-toggle" class="iconfont icon-menu"></i>
+    <nav class="g-nav">
+        <ul>
+            
+            <li><a href="/">home</a></li>
+            
+            <li><a href="/tags.html">tags</a></li>
+            
+        </ul>
+    </nav>
+</header>
+
+
+<header class="g-banner post-header post-pattern-circuitBoard bgcolor-default post-no-cover" data-theme="default">
+    <div class="post-wrapper">
+        <div class="post-tags">
+            
+        </div>
+        <h1>libpcap 源码简析</h1>
+        <div class="post-meta">
+            <span class="post-meta-item"><i class="iconfont icon-author"></i><a href="https://xsyr.github.io" target="_blank" rel="author">黄成林</a></></span>
+            <time class="post-meta-item" datetime="14-01-10"><i class="iconfont icon-date"></i>10 Jan 2014</time>
+        </div>
+    </div>
+    
+</header>
+
+<div class="post-content">
+    
+    <article class="markdown-body">
+        <p>前面在实现 <a href="http://xinsuiyuer.github.io/blog/2014/01/05/ptpproxy/">1588 报文转发</a>时使用了 RAW Soket，公司要求组网时要能支持 1000台
+1588 客户端，所以需要尽量提高转发程序的性能。目前采取如下措施：</p>
+
+<ol>
+  <li>使用 libpcap 代替 Raw Socket，在 CONFIG_PACKET_MMAP 参数开启的内核中可以使用
+ Memory-mapped I/O 提高性能。</li>
+  <li>只有本客户端对应的 Delay_Resp 报文才会转发，并丢弃其他客户端发出的 Req 报文。</li>
+  <li>客户端在收到 Sync 报文之后，随机选择一个时间延时发出 Delay_Req 报文，这样可以
+减轻主时钟服务器的并发压力，也可以减少转发程序的压力。</li>
+</ol>
+
+<p>libpcap 1.5.2 的使用步骤如下：</p>
+
+<ol>
+  <li>pcap_create() 创建一个 handle</li>
+  <li>pcap_activate(handle)</li>
+  <li>pcap_setfilter() 设置过滤规则</li>
+  <li>pcap_loop(), pcap_dispatch(), pcap_next(), pcap_next_ex() 读取报文。</li>
+  <li>pcap_inject(), pcap_sendpacket() 发送数据</li>
+  <li>pcap_close(handle)</li>
+</ol>
+
+<!-- more -->
+
+<p>几个函数的调用过程：</p>
+<div class="language-c highlighter-rouge"><pre class="highlight"><code><span class="n">pcap_create</span><span class="p">()</span>
+    <span class="n">pcap_create_interface</span><span class="p">()</span>
+        <span class="n">pcap_create_common</span><span class="p">()</span>
+        <span class="n">activate_op</span> <span class="o">=</span> <span class="n">pcap_activate_linux</span><span class="p">;</span>
+
+
+
+<span class="n">pcap_activate</span><span class="p">(</span><span class="n">handle</span><span class="p">)</span>
+    <span class="n">p</span><span class="o">-&gt;</span><span class="n">activate_op</span><span class="p">(</span><span class="n">handle</span><span class="p">)</span>
+
+
+
+
+
+<span class="n">pcap_activate_linux</span><span class="p">(</span><span class="n">handle</span><span class="p">)</span>
+	<span class="n">handle</span><span class="o">-&gt;</span><span class="n">inject_op</span>       <span class="o">=</span> <span class="n">pcap_inject_linux</span><span class="p">;</span>
+	<span class="n">handle</span><span class="o">-&gt;</span><span class="n">setfilter_op</span>    <span class="o">=</span> <span class="n">pcap_setfilter_linux</span><span class="p">;</span>
+	<span class="n">handle</span><span class="o">-&gt;</span><span class="n">setdirection_op</span> <span class="o">=</span> <span class="n">pcap_setdirection_linux</span><span class="p">;</span>
+	<span class="n">handle</span><span class="o">-&gt;</span><span class="n">set_datalink_op</span> <span class="o">=</span> <span class="n">pcap_set_datalink_linux</span><span class="p">;</span>
+	<span class="n">handle</span><span class="o">-&gt;</span><span class="n">getnonblock_op</span>  <span class="o">=</span> <span class="n">pcap_getnonblock_fd</span><span class="p">;</span>
+	<span class="n">handle</span><span class="o">-&gt;</span><span class="n">setnonblock_op</span>  <span class="o">=</span> <span class="n">pcap_setnonblock_fd</span><span class="p">;</span>
+	<span class="n">handle</span><span class="o">-&gt;</span><span class="n">cleanup_op</span>      <span class="o">=</span> <span class="n">pcap_cleanup_linux</span><span class="p">;</span>
+	<span class="n">handle</span><span class="o">-&gt;</span><span class="n">read_op</span>         <span class="o">=</span> <span class="n">pcap_read_linux</span><span class="p">;</span>
+	<span class="n">handle</span><span class="o">-&gt;</span><span class="n">stats_op</span>        <span class="o">=</span> <span class="n">pcap_stats_linux</span><span class="p">;</span>
+
+
+    <span class="n">activate_new</span><span class="p">(</span><span class="n">handle</span><span class="p">)</span>
+        <span class="n">socket</span><span class="p">(</span><span class="n">PF_PACKET</span><span class="p">,</span> <span class="n">SOCK_RAW</span><span class="p">,</span> <span class="n">htons</span><span class="p">(</span><span class="n">ETH_P_ALL</span><span class="p">))</span>
+    <span class="n">activate_mmap</span><span class="p">(</span><span class="n">handle</span><span class="p">)</span>
+        <span class="n">handle</span><span class="o">-&gt;</span><span class="n">read_op</span> <span class="o">=</span> <span class="n">pcap_read_linux_mmap_v1</span><span class="o">/</span><span class="mi">2</span><span class="o">/</span><span class="mi">3</span><span class="p">;</span>
+
+
+        <span class="c1">/// 如果调用 pcap_next_ex() 或者 pcap_next()，则需要在 pcap_loop() 的回调函数中
+</span>        <span class="c1">/// 将 MMAP 的 frame 复制到此 buffer中。因此这和直接调用 recv，recvfrom 一样，要进行一次内存拷贝，
+</span>        <span class="c1">/// 这失去了 MMAP 的优势。
+</span>        <span class="n">handle</span><span class="o">-&gt;</span><span class="n">priv</span><span class="o">-&gt;</span><span class="n">oneshot_buffer</span> <span class="o">=</span> <span class="n">malloc</span><span class="p">(</span><span class="n">handle</span><span class="o">-&gt;</span><span class="n">snapshot</span><span class="p">);</span>
+        <span class="n">create_ring</span><span class="p">(</span><span class="n">handle</span><span class="p">)</span>
+
+            <span class="c1">/// 计算 环形缓冲区 的总大小
+</span>            <span class="c1">/// 环形缓冲区由多个块（Block）组成，每个 Block 又由 帧（Frame）组成。
+</span>            <span class="c1">/// 这些帧会映射到实际的物理内存中，内核和用户进程共享此内存块。
+</span>            <span class="n">handlep</span><span class="o">-&gt;</span><span class="n">mmapbuflen</span> <span class="o">=</span> <span class="n">req</span><span class="p">.</span><span class="n">tp_block_nr</span> <span class="o">*</span> <span class="n">req</span><span class="p">.</span><span class="n">tp_block_size</span><span class="p">;</span>
+            <span class="n">handlep</span><span class="o">-&gt;</span><span class="n">mmapbuf</span> <span class="o">=</span> <span class="n">mmap</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">handlep</span><span class="o">-&gt;</span><span class="n">mmapbuflen</span><span class="p">,</span> <span class="n">PROT_READ</span><span class="o">|</span><span class="n">PROT_WRITE</span><span class="p">,</span> <span class="n">MAP_SHARED</span><span class="p">,</span> <span class="n">handle</span><span class="o">-&gt;</span><span class="n">fd</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+
+
+
+<span class="n">pcap_loop</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="n">callback</span><span class="p">,</span> <span class="p">...)</span>
+    <span class="k">while</span><span class="p">(</span><span class="n">condition</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">handle</span><span class="o">-&gt;</span><span class="n">read_op</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="p">...)</span>
+            <span class="n">pcap_read_linux_mmap_v1</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="p">...)</span>
+                <span class="n">pcap_wait_for_frames_mmap</span><span class="p">(</span><span class="n">handle</span><span class="p">)</span>
+                    <span class="n">poll</span><span class="p">({</span> <span class="n">handle</span><span class="o">-&gt;</span><span class="n">fd</span> <span class="p">})</span>
+
+                <span class="c1">/// 内核将收到数据填充到 Frame，并将 tpacket_hdr 的 tp_status 标记为
+</span>                <span class="c1">/// TP_STATUS_USER 。
+</span>                <span class="n">pcap_get_ring_frame</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="n">TP_STATUS_USER</span><span class="p">)</span>
+
+                <span class="c1">/// 将 Frame 传给回调函数。相对于 recv，少了一次内存复制。
+</span>                <span class="n">pcap_handle_packet_mmap</span><span class="p">(</span><span class="n">callback</span><span class="p">)</span>
+
+                <span class="c1">/// 将 Frame 标记为 TP_STATUS_KERNEL，告知内核可以用来接收数据了。
+</span>                <span class="n">h</span><span class="p">.</span><span class="n">h1</span><span class="o">-&gt;</span><span class="n">tp_status</span> <span class="o">=</span> <span class="n">TP_STATUS_KERNEL</span><span class="p">;</span>
+    <span class="p">}</span>
+
+<span class="n">pcap_dispatch</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="p">...)</span>
+    <span class="n">handle</span><span class="o">-&gt;</span><span class="n">read_op</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="p">...)</span>
+
+
+<span class="n">pcap_next</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="p">...)</span>
+    <span class="n">pcap_dispatch</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="p">...)</span>
+
+
+<span class="n">pcap_next_ex</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="p">...)</span>
+    <span class="n">handle</span><span class="o">-&gt;</span><span class="n">read_op</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="p">...)</span>
+
+
+<span class="n">pcap_inject</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="p">...)</span>
+    <span class="n">handle</span><span class="o">-&gt;</span><span class="n">inject_op</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="n">pcap_inject_linux</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+            <span class="n">send</span><span class="p">(</span><span class="n">handle</span><span class="o">-&gt;</span><span class="n">fd</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+
+
+
+</code></pre>
+</div>
+
+    </article>
+    
+    <div class="social-share-wrapper">
+        <div class="social-share"></div>
+    </div>
+    
+</div>
+
+<section class="author-detail">
+    <section class="post-footer-item author-card">
+        <div class="avatar">
+            <img src="/assets/img/profile.jpg" alt="">
+        </div>
+        <div class="author-name" rel="author">黄成林</div>
+        <div class="bio">
+            <p>后端开发者，热爱技术，简单爱折腾</p>
+        </div>
+        
+        <ul class="sns-links">
+            
+            <li>
+                <a href="//github.com/xsyr" target="_blank">
+                    <i class="iconfont icon-github"></i>
+                </a>
+            </li>
+            
+        </ul>
+        
+    </section>
+    <section class="post-footer-item read-next">
+        
+        <div class="read-next-item">
+            <a href="/%E7%BC%96%E7%A8%8B/c/c++/2014/01/11/cpp-check-static-analysis.html" class="read-next-link"></a>
+            <section>
+                <span>cppcheck - 静态代码分析工具</span>
+                <p>cppcheck 是一个静态代码分析工具。它可以静态检查内存泄漏，访问越界等错误，当然不会是很全面和精确的，但不失...</p>
+            </section>
+            
+        </div>
+        
+         
+        <div class="read-next-item">
+            <a href="/%E7%BC%96%E7%A8%8B/2014/01/10/1588-design-model.html" class="read-next-link"></a>
+            <section>
+                <span>1588 OC 模型</span>
+                <p>最近负责实现项目的 1588 时钟同步方案，实现 OC （普通时钟）的功能。1588可以提供ns 级别的时钟，在通...</p>
+            </section>
+            
+        </div>
+        
+    </section>
+    
+</section>
+
+<footer class="g-footer">
+    <section>xsyr的独立博客 © 2017</section>
+    <section>Powered by <a href="//jekyllrb.com">Jekyll</a> | <a href="https://github.com/kaeyleo/jekyll-theme-H2O">Theme H2O</a></section>
+</footer>
+
+<script src="/assets/js/social-share.min.js"></script>
+<script>
+    socialShare('.social-share', {
+        sites: ['wechat','weibo','douban','twitter'],
+        wechatQrcodeTitle: "分享到微信朋友圈",
+        wechatQrcodeHelper: '<p>扫码后点击右上角</p><p>将本文分享至朋友圈</p>'
+    });
+</script>
+<script>
+/**
+*  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+*  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables*/
+/*
+var disqus_config = function () {
+this.page.url = PAGE_URL;  // Replace PAGE_URL with your page's canonical URL variable
+this.page.identifier = PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+};
+*/
+(function() { // DON'T EDIT BELOW THIS LINE
+var d = document, s = d.createElement('script');
+/*写入自己的disqus信息*/
+s.src = '#';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<script src="https://cdn.staticfile.org/jquery/3.2.1/jquery.min.js"></script>
+<script src="/assets/js/prism.js"></script>
+<script src="/assets/js/index.min.js"></script>
+</body>
+</html>

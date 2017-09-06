@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Atom + Github Pages markdown 插件安装 - xsyr的独立博客</title>
+    <title>1588 OC 模型 - xsyr的独立博客</title>
     <meta name="author"  content="黄成林">
-    <meta name="description" content="Atom + Github Pages markdown 插件安装">
-    <meta name="keywords"  content="markdown">
+    <meta name="description" content="1588 OC 模型">
+    <meta name="keywords"  content="">
     <!-- Open Graph -->
-    <meta property="og:title" content="Atom + Github Pages markdown 插件安装 - xsyr的独立博客">
+    <meta property="og:title" content="1588 OC 模型 - xsyr的独立博客">
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://xsyr.github.io/markdown/2017/09/06/atom-markdown-plugins.html">
+    <meta property="og:url" content="https://xsyr.github.io/%E7%BC%96%E7%A8%8B/2014/01/10/1588-design-model.html">
     <meta property="og:description" content="经验源于爱折腾, 喜欢折腾各种新鲜玩意儿。">
     <meta property="og:site_name" content="xsyr的独立博客">
     <link rel="shortcut icon" href="/assets/img/favicon.ico">
@@ -44,69 +44,39 @@
 </header>
 
 
-<header class="g-banner post-header post-pattern-circuitBoard bgcolor-default " data-theme="default">
+<header class="g-banner post-header post-pattern-circuitBoard bgcolor-default post-no-cover" data-theme="default">
     <div class="post-wrapper">
         <div class="post-tags">
-             
-            
-            <a href="tags#markdown" class="post-tag">markdown</a>
-            
             
         </div>
-        <h1>Atom + Github Pages markdown 插件安装</h1>
+        <h1>1588 OC 模型</h1>
         <div class="post-meta">
             <span class="post-meta-item"><i class="iconfont icon-author"></i><a href="https://xsyr.github.io" target="_blank" rel="author">黄成林</a></></span>
-            <time class="post-meta-item" datetime="17-09-06"><i class="iconfont icon-date"></i>06 Sep 2017</time>
+            <time class="post-meta-item" datetime="14-01-10"><i class="iconfont icon-date"></i>10 Jan 2014</time>
         </div>
     </div>
-    
-    <div class="filter"></div>
-    <div class="post-cover" style="background: url('/assets/img/atom-markdown-editor-effect.png') center no-repeat; background-size: cover;">
     
 </header>
 
 <div class="post-content">
     
-    <h2 class="post-subtitle"></h2>
-    
     <article class="markdown-body">
-        <p>在 VIM 里写 markdown 真的不太方便，特别是要贴图的时。Atom 的几个插件可以帮助我们快捷的写
-markdown文档。这里介绍几个：</p>
-<ol>
-  <li><code class="highlighter-rouge">markdown-preview-plus</code> 用于在 Atom 生成预览</li>
-  <li><code class="highlighter-rouge">markdown-imgage-paste</code> 用于在 Atom 中<code class="highlighter-rouge">ctrl+v</code> 粘贴图片</li>
-  <li><code class="highlighter-rouge">language-markdown</code>     用于编程语言高亮</li>
-  <li><code class="highlighter-rouge">markdown-scroll-sync</code>  用于同步滚动预览窗口</li>
-  <li><code class="highlighter-rouge">markdown-table-editor</code>  用于编辑表格</li>
-</ol>
+        <p>最近负责实现项目的 1588 时钟同步方案，实现 OC （普通时钟）的功能。1588可以提供
+ns 级别的时钟，在通信行业普遍应用。OC 通过收集 Announce 报文，之后利用 BMC 算法
+选出最佳主时钟。在收到主时钟的 Sync 报文时，FPGA 会打上 t2 然后才传给 Linux 网络
+模块，这样就收到了 t1, t2。接着 OC 发 Req 报文给主时钟，此时 FPGA 记下 t3,主时钟
+返回 Delay_Resp 时带上 t4。通过 t1, t2, t3, t4 就可以算出时差和网络延时： <br />
+与主时钟的时差 = <code class="highlighter-rouge">((t2 - t1) - (t4 - t3))/2</code>   <br />
+网络延时       = <code class="highlighter-rouge">((t2 - t1) + (t4 - t3))/2</code></p>
 
-<p>Github Pages 是用 jekyll 生成的静态网页，所以会遵循jekyll的布局，通常 markdown 文档
-保存在 <code class="highlighter-rouge">_post</code> 目录下，生成的静态网页在 <code class="highlighter-rouge">_site</code> 下，markdown 中引用的图片一般放到
-jekyll根目录的 <code class="highlighter-rouge">assets/img</code> 中，所以本文用到的 <code class="highlighter-rouge">markdown-preview-plus</code> 和 <code class="highlighter-rouge">markdown-imgage-paste</code> 做了适当修改，一是 ctrl+v 粘贴的图片自动保存到<code class="highlighter-rouge">assets/img</code>下，
-<code class="highlighter-rouge">markdown-preview-plus</code>生成预览时会到 <code class="highlighter-rouge">assets/img</code>下找到对应的图片。
-效果图
-<img src="/assets/img/atom-markdown-editor-effect.png" alt="atom-markdown-editor-effect" /></p>
+<p>OC 只包含一个 Port，State 及其子类构成了 Slave-Only OC 的状态机。</p>
 
-<h1 id="1-安装-markdown-preview-plus--markdown-imgage-paste">1. 安装 markdown-preview-plus + markdown-imgage-paste</h1>
+<p>Iface 是收发 1588 报文的接口。1588 可以支持 以太网二层组播包，IP 单播 和 IP 组播。
+分别对应 LinkLayerMulticastIface, IpUnicastIface 和 IpMulticastIface。
+<!-- more --></p>
 
-<div class="language-shell highlighter-rouge"><pre class="highlight"><code><span class="gp">$ </span>apm install xsyr/markdown-img-paste
-<span class="gp">$ </span>apm install xsyr/markdown-preview-plus
-</code></pre>
-</div>
-
-<h2 id="markdown-preview-plus-开启-jekyll-支持功能">markdown-preview-plus 开启 jekyll 支持功能</h2>
-<p><img src="/assets/img/markdown-preview-plus-enable.png" alt="markdown-preview-plus-enable" /></p>
-
-<h2 id="markdown-imgage-paste-开启-jekyll-支持功能">markdown-imgage-paste 开启 jekyll 支持功能</h2>
-<p><img src="/assets/img/markdown-imgage-paste-enable.png" alt="markdown-imgage-paste-enable" />
-其中<code class="highlighter-rouge">Jekyll image folder</code>为相对jekyll根目录用于保存图片的文件夹.</p>
-
-<h1 id="2-安装其他插件">2. 安装其他插件</h1>
-<div class="language-shell highlighter-rouge"><pre class="highlight"><code><span class="gp">$ </span>apm install language-markdown
-<span class="gp">$ </span>apm install markdown-scroll-sync
-<span class="gp">$ </span>apm install markdown-table-editor
-</code></pre>
-</div>
+<p>OC 模型： <br />
+<img src="/assets/img/1588-Model.png" alt="pic" /></p>
 
     </article>
     
@@ -139,12 +109,21 @@ jekyll根目录的 <code class="highlighter-rouge">assets/img</code> 中，所�
     </section>
     <section class="post-footer-item read-next">
         
+        <div class="read-next-item">
+            <a href="/programming/c/2014/01/10/libpcap-source-view.html" class="read-next-link"></a>
+            <section>
+                <span>libpcap 源码简析</span>
+                <p>前面在实现 1588 报文转发时使用了 RAW Soket，公司要求组网时要能支持 1000台1588 客户端，所...</p>
+            </section>
+            
+        </div>
+        
          
         <div class="read-next-item">
-            <a href="/%E7%BC%96%E7%A8%8B/c/c++/2014/02/14/clang-static-analyzer-with-jenkins-on-linux.html" class="read-next-link"></a>
+            <a href="/c/c++/2014/01/07/color-logger.html" class="read-next-link"></a>
             <section>
-                <span>clang static analyzer with jenkins on linux</span>
-                <p>clang 是一个优秀的编译器，基于 clang 的 clang static anayler 静态检查工具也是开...</p>
+                <span>color logger</span>
+                <p>写了个简单的 logger，方便调试。</p>
             </section>
             
         </div>

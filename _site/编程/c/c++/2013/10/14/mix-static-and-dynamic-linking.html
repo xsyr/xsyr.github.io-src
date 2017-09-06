@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Atom + Github Pages markdown 插件安装 - xsyr的独立博客</title>
+    <title>mix static and dynamic linking - xsyr的独立博客</title>
     <meta name="author"  content="黄成林">
-    <meta name="description" content="Atom + Github Pages markdown 插件安装">
-    <meta name="keywords"  content="markdown">
+    <meta name="description" content="mix static and dynamic linking">
+    <meta name="keywords"  content="">
     <!-- Open Graph -->
-    <meta property="og:title" content="Atom + Github Pages markdown 插件安装 - xsyr的独立博客">
+    <meta property="og:title" content="mix static and dynamic linking - xsyr的独立博客">
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://xsyr.github.io/markdown/2017/09/06/atom-markdown-plugins.html">
+    <meta property="og:url" content="https://xsyr.github.io/%E7%BC%96%E7%A8%8B/c/c++/2013/10/14/mix-static-and-dynamic-linking.html">
     <meta property="og:description" content="经验源于爱折腾, 喜欢折腾各种新鲜玩意儿。">
     <meta property="og:site_name" content="xsyr的独立博客">
     <link rel="shortcut icon" href="/assets/img/favicon.ico">
@@ -44,69 +44,52 @@
 </header>
 
 
-<header class="g-banner post-header post-pattern-circuitBoard bgcolor-default " data-theme="default">
+<header class="g-banner post-header post-pattern-circuitBoard bgcolor-default post-no-cover" data-theme="default">
     <div class="post-wrapper">
         <div class="post-tags">
-             
-            
-            <a href="tags#markdown" class="post-tag">markdown</a>
-            
             
         </div>
-        <h1>Atom + Github Pages markdown 插件安装</h1>
+        <h1>mix static and dynamic linking</h1>
         <div class="post-meta">
             <span class="post-meta-item"><i class="iconfont icon-author"></i><a href="https://xsyr.github.io" target="_blank" rel="author">黄成林</a></></span>
-            <time class="post-meta-item" datetime="17-09-06"><i class="iconfont icon-date"></i>06 Sep 2017</time>
+            <time class="post-meta-item" datetime="13-10-14"><i class="iconfont icon-date"></i>14 Oct 2013</time>
         </div>
     </div>
-    
-    <div class="filter"></div>
-    <div class="post-cover" style="background: url('/assets/img/atom-markdown-editor-effect.png') center no-repeat; background-size: cover;">
     
 </header>
 
 <div class="post-content">
     
-    <h2 class="post-subtitle"></h2>
-    
     <article class="markdown-body">
-        <p>在 VIM 里写 markdown 真的不太方便，特别是要贴图的时。Atom 的几个插件可以帮助我们快捷的写
-markdown文档。这里介绍几个：</p>
-<ol>
-  <li><code class="highlighter-rouge">markdown-preview-plus</code> 用于在 Atom 生成预览</li>
-  <li><code class="highlighter-rouge">markdown-imgage-paste</code> 用于在 Atom 中<code class="highlighter-rouge">ctrl+v</code> 粘贴图片</li>
-  <li><code class="highlighter-rouge">language-markdown</code>     用于编程语言高亮</li>
-  <li><code class="highlighter-rouge">markdown-scroll-sync</code>  用于同步滚动预览窗口</li>
-  <li><code class="highlighter-rouge">markdown-table-editor</code>  用于编辑表格</li>
-</ol>
+        <p>混合的使用静态库与动态库有时候很有用，比如第三方库只提供了静态库但你不想所有库
+都使用静态的，所以不能使用 <strong>-static</strong> 编译选项。反之也一样，不能为了几个动态库
+而使用 <strong>-shared</strong> 选项。再如，对性能敏感的模块使用静态编译可以提升性能，
+对性能不敏感的模块可以使用动态链接，这样可以有效的减小程序的体积。
+这时候能体现出混合使用动静态库的优势。ld 链接程序提供了
+两个选项用于指定所引用的库是静态的还是动态的。</p>
 
-<p>Github Pages 是用 jekyll 生成的静态网页，所以会遵循jekyll的布局，通常 markdown 文档
-保存在 <code class="highlighter-rouge">_post</code> 目录下，生成的静态网页在 <code class="highlighter-rouge">_site</code> 下，markdown 中引用的图片一般放到
-jekyll根目录的 <code class="highlighter-rouge">assets/img</code> 中，所以本文用到的 <code class="highlighter-rouge">markdown-preview-plus</code> 和 <code class="highlighter-rouge">markdown-imgage-paste</code> 做了适当修改，一是 ctrl+v 粘贴的图片自动保存到<code class="highlighter-rouge">assets/img</code>下，
-<code class="highlighter-rouge">markdown-preview-plus</code>生成预览时会到 <code class="highlighter-rouge">assets/img</code>下找到对应的图片。
-效果图
-<img src="/assets/img/atom-markdown-editor-effect.png" alt="atom-markdown-editor-effect" /></p>
-
-<h1 id="1-安装-markdown-preview-plus--markdown-imgage-paste">1. 安装 markdown-preview-plus + markdown-imgage-paste</h1>
-
-<div class="language-shell highlighter-rouge"><pre class="highlight"><code><span class="gp">$ </span>apm install xsyr/markdown-img-paste
-<span class="gp">$ </span>apm install xsyr/markdown-preview-plus
+<div class="language-shell highlighter-rouge"><pre class="highlight"><code><span class="gp">$ </span>ld --help
+  ...
+  -Bdynamic, -dy, -call_shared
+                              Link against shared libraries
+  -Bstatic, -dn, -non_shared, -static
+                              Do not link against shared libraries
+  ...
 </code></pre>
 </div>
 
-<h2 id="markdown-preview-plus-开启-jekyll-支持功能">markdown-preview-plus 开启 jekyll 支持功能</h2>
-<p><img src="/assets/img/markdown-preview-plus-enable.png" alt="markdown-preview-plus-enable" /></p>
+<p>例如：如果想在链接的时候使用  duma 的静态库，其他的库则默认使用动态库。
+则可以这样编译：</p>
 
-<h2 id="markdown-imgage-paste-开启-jekyll-支持功能">markdown-imgage-paste 开启 jekyll 支持功能</h2>
-<p><img src="/assets/img/markdown-imgage-paste-enable.png" alt="markdown-imgage-paste-enable" />
-其中<code class="highlighter-rouge">Jekyll image folder</code>为相对jekyll根目录用于保存图片的文件夹.</p>
-
-<h1 id="2-安装其他插件">2. 安装其他插件</h1>
-<div class="language-shell highlighter-rouge"><pre class="highlight"><code><span class="gp">$ </span>apm install language-markdown
-<span class="gp">$ </span>apm install markdown-scroll-sync
-<span class="gp">$ </span>apm install markdown-table-editor
+<div class="language-shell highlighter-rouge"><pre class="highlight"><code><span class="gp">$ </span>g++ -g -O0 heap-corruption.cc -o heapC -Wl,-Bstatic,-lduma -Wl,-Bdynamic -pthread
 </code></pre>
 </div>
+
+<p>这样，链接时 ld 回去找 libduma.a，其他的包括 pthread 会链接到动态库。如果没有
+像上面一样使用 pthread，也要保留 <strong>-Wl,-Bdynamic -pthread</strong> ，否则其他也会使用静态库，
+通常会出现问题。反正最后指定的链接选项很重要，不管是 <strong>-Wl,-Bdynamic</strong> 还是
+<strong>-Wl,-Bstatic</strong>，它指定除了在命令行中显式指定的库之外都会使用这个选项对应类型
+的库。</p>
 
     </article>
     
@@ -139,12 +122,21 @@ jekyll根目录的 <code class="highlighter-rouge">assets/img</code> 中，所�
     </section>
     <section class="post-footer-item read-next">
         
+        <div class="read-next-item">
+            <a href="/%E7%BC%96%E7%A8%8B/c/c++/2013/10/15/duma-malloc-debugger.html" class="read-next-link"></a>
+            <section>
+                <span>使用 DUMA 检测 C++ 内存违规访问和内存泄漏</span>
+                <p>D.U.M.A 的全称是 Detect Unintended Memory Access，它是 Electric ...</p>
+            </section>
+            
+        </div>
+        
          
         <div class="read-next-item">
-            <a href="/%E7%BC%96%E7%A8%8B/c/c++/2014/02/14/clang-static-analyzer-with-jenkins-on-linux.html" class="read-next-link"></a>
+            <a href="/linux/2013/10/13/posix-getconf.html" class="read-next-link"></a>
             <section>
-                <span>clang static analyzer with jenkins on linux</span>
-                <p>clang 是一个优秀的编译器，基于 clang 的 clang static anayler 静态检查工具也是开...</p>
+                <span>getconf 查看系统变量</span>
+                <p>getconf 是 glibc 带的一个命令，可以用来查看使用 sysconf，pathconf和confstr函...</p>
             </section>
             
         </div>

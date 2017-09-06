@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Atom + Github Pages markdown 插件安装 - xsyr的独立博客</title>
+    <title>valgrind Memcheck 检测内存错误 - GDB - xsyr的独立博客</title>
     <meta name="author"  content="黄成林">
-    <meta name="description" content="Atom + Github Pages markdown 插件安装">
-    <meta name="keywords"  content="markdown">
+    <meta name="description" content="valgrind Memcheck 检测内存错误 - GDB">
+    <meta name="keywords"  content="">
     <!-- Open Graph -->
-    <meta property="og:title" content="Atom + Github Pages markdown 插件安装 - xsyr的独立博客">
+    <meta property="og:title" content="valgrind Memcheck 检测内存错误 - GDB - xsyr的独立博客">
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://xsyr.github.io/markdown/2017/09/06/atom-markdown-plugins.html">
+    <meta property="og:url" content="https://xsyr.github.io/%E7%BC%96%E7%A8%8B/c/c++/2013/10/26/valgrind-with-gdb.html">
     <meta property="og:description" content="经验源于爱折腾, 喜欢折腾各种新鲜玩意儿。">
     <meta property="og:site_name" content="xsyr的独立博客">
     <link rel="shortcut icon" href="/assets/img/favicon.ico">
@@ -44,69 +44,80 @@
 </header>
 
 
-<header class="g-banner post-header post-pattern-circuitBoard bgcolor-default " data-theme="default">
+<header class="g-banner post-header post-pattern-circuitBoard bgcolor-default post-no-cover" data-theme="default">
     <div class="post-wrapper">
         <div class="post-tags">
-             
-            
-            <a href="tags#markdown" class="post-tag">markdown</a>
-            
             
         </div>
-        <h1>Atom + Github Pages markdown 插件安装</h1>
+        <h1>valgrind Memcheck 检测内存错误 - GDB</h1>
         <div class="post-meta">
             <span class="post-meta-item"><i class="iconfont icon-author"></i><a href="https://xsyr.github.io" target="_blank" rel="author">黄成林</a></></span>
-            <time class="post-meta-item" datetime="17-09-06"><i class="iconfont icon-date"></i>06 Sep 2017</time>
+            <time class="post-meta-item" datetime="13-10-26"><i class="iconfont icon-date"></i>26 Oct 2013</time>
         </div>
     </div>
-    
-    <div class="filter"></div>
-    <div class="post-cover" style="background: url('/assets/img/atom-markdown-editor-effect.png') center no-repeat; background-size: cover;">
     
 </header>
 
 <div class="post-content">
     
-    <h2 class="post-subtitle"></h2>
-    
     <article class="markdown-body">
-        <p>在 VIM 里写 markdown 真的不太方便，特别是要贴图的时。Atom 的几个插件可以帮助我们快捷的写
-markdown文档。这里介绍几个：</p>
+        <p>有时候结合使用 GDB 和 Valgrind 会非常有用，比如当出现了一个错误，用 GDB 附加到
+进程中以获得更多的信息。前面提到 程序是运行在 Valgrind 提供的模拟 CPU 上，所以
+不能直接附加到 Valgrind 的进程中，那就变成调试 Valgrind 了。Valgrind 提供了 GDB
+远程调试机制，可以连接到 Valgrind 实现的 gdbserver 中。步骤如下：</p>
+
+<div class="language-shell highlighter-rouge"><pre class="highlight"><code><span class="gp">$ </span>valgrind --tool<span class="o">=</span>memcheck --vgdb<span class="o">=</span>yes --vgdb-error<span class="o">=</span>0 ./heapC
+</code></pre>
+</div>
+
+<p><code class="highlighter-rouge">--vgdb</code> 和 <code class="highlighter-rouge">--vgdb--error</code> 可以参考前面的文章<a href="http://xinsuiyuer.github.io/blog/2013/10/25/use-valgrind-memcheck-to-detect-memory-error-1/">valgrind Memcheck 检测内存错误 - 使用</a>。启动之后 Valgrind 会等待 gdb 连接上来。</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>==14669== Memcheck, a memory error detector
+==14669== Copyright (C) 2002-2012, and GNU GPL'd, by Julian Seward et al.
+==14669== Using Valgrind-3.8.1 and LibVEX; rerun with -h for copyright info
+==14669== Command: ./heapC
+==14669==
+==14669== (action at startup) vgdb me ...
+==14669==
+==14669== TO DEBUG THIS PROCESS USING GDB: start GDB like this
+==14669==   /path/to/gdb ./heapC
+==14669== and then give GDB the following command
+==14669==   target remote | /usr/lib64/valgrind/../../bin/vgdb --pid=14669
+==14669== --pid is optional if only one valgrind process is running
+==14669==
+</code></pre>
+</div>
+
+<p>GDB 通过 vgdb 连接到 Valgrind。</p>
+<div class="language-shell highlighter-rouge"><pre class="highlight"><code><span class="gp">$ </span>gdb ./heapC
+<span class="o">(</span>gdb<span class="o">)</span> target remote | vgdb
+</code></pre>
+</div>
+
+<p>如果有多个被调试程序同时运行，在执行 target remote | vgdb 时会提示连接到哪个
+进程中：</p>
+<div class="highlighter-rouge"><pre class="highlight"><code>(gdb) target remote | vgdb
+Remote debugging using | vgdb
+no --pid= arg given and multiple valgrind pids found:
+use --pid=16988 for valgrind --vgdb=yes --vgdb-error=0 ./heapC
+use --pid=17013 for valgrind --vgdb=yes --vgdb-error=0 ./heapC
+Remote communication error.  Target disconnected.: Connection reset by peer.
+</code></pre>
+</div>
+
+<p>可以通过给 vgdb 提供 pid 选项指定连接到哪个进程：</p>
+<div class="language-shell highlighter-rouge"><pre class="highlight"><code><span class="o">(</span>gdb<span class="o">)</span> target remote | vgdb --pid<span class="o">=</span>17013
+</code></pre>
+</div>
+
+<p>连接到调试进程之后就可以使用 GDB 的各种命令调试程序。</p>
+
+<hr />
+
+<h2 id="参考链接">参考链接</h2>
 <ol>
-  <li><code class="highlighter-rouge">markdown-preview-plus</code> 用于在 Atom 生成预览</li>
-  <li><code class="highlighter-rouge">markdown-imgage-paste</code> 用于在 Atom 中<code class="highlighter-rouge">ctrl+v</code> 粘贴图片</li>
-  <li><code class="highlighter-rouge">language-markdown</code>     用于编程语言高亮</li>
-  <li><code class="highlighter-rouge">markdown-scroll-sync</code>  用于同步滚动预览窗口</li>
-  <li><code class="highlighter-rouge">markdown-table-editor</code>  用于编辑表格</li>
+  <li><a href="http://valgrind.org/docs/manual/manual-core-adv.html#manual-core-adv.gdbserver">Using and understanding the Valgrind core: Advanced Topics</a></li>
 </ol>
-
-<p>Github Pages 是用 jekyll 生成的静态网页，所以会遵循jekyll的布局，通常 markdown 文档
-保存在 <code class="highlighter-rouge">_post</code> 目录下，生成的静态网页在 <code class="highlighter-rouge">_site</code> 下，markdown 中引用的图片一般放到
-jekyll根目录的 <code class="highlighter-rouge">assets/img</code> 中，所以本文用到的 <code class="highlighter-rouge">markdown-preview-plus</code> 和 <code class="highlighter-rouge">markdown-imgage-paste</code> 做了适当修改，一是 ctrl+v 粘贴的图片自动保存到<code class="highlighter-rouge">assets/img</code>下，
-<code class="highlighter-rouge">markdown-preview-plus</code>生成预览时会到 <code class="highlighter-rouge">assets/img</code>下找到对应的图片。
-效果图
-<img src="/assets/img/atom-markdown-editor-effect.png" alt="atom-markdown-editor-effect" /></p>
-
-<h1 id="1-安装-markdown-preview-plus--markdown-imgage-paste">1. 安装 markdown-preview-plus + markdown-imgage-paste</h1>
-
-<div class="language-shell highlighter-rouge"><pre class="highlight"><code><span class="gp">$ </span>apm install xsyr/markdown-img-paste
-<span class="gp">$ </span>apm install xsyr/markdown-preview-plus
-</code></pre>
-</div>
-
-<h2 id="markdown-preview-plus-开启-jekyll-支持功能">markdown-preview-plus 开启 jekyll 支持功能</h2>
-<p><img src="/assets/img/markdown-preview-plus-enable.png" alt="markdown-preview-plus-enable" /></p>
-
-<h2 id="markdown-imgage-paste-开启-jekyll-支持功能">markdown-imgage-paste 开启 jekyll 支持功能</h2>
-<p><img src="/assets/img/markdown-imgage-paste-enable.png" alt="markdown-imgage-paste-enable" />
-其中<code class="highlighter-rouge">Jekyll image folder</code>为相对jekyll根目录用于保存图片的文件夹.</p>
-
-<h1 id="2-安装其他插件">2. 安装其他插件</h1>
-<div class="language-shell highlighter-rouge"><pre class="highlight"><code><span class="gp">$ </span>apm install language-markdown
-<span class="gp">$ </span>apm install markdown-scroll-sync
-<span class="gp">$ </span>apm install markdown-table-editor
-</code></pre>
-</div>
 
     </article>
     
@@ -139,12 +150,21 @@ jekyll根目录的 <code class="highlighter-rouge">assets/img</code> 中，所�
     </section>
     <section class="post-footer-item read-next">
         
+        <div class="read-next-item">
+            <a href="/%E7%BC%96%E7%A8%8B/c/c++/2013/10/30/include-what-you-use.html" class="read-next-link"></a>
+            <section>
+                <span>使用 I.W.Y.U 整理头文件引用</span>
+                <p>C++ 的复杂性导致其编译速度极慢，特别是项目的代码量很大时尤为明显。通常为了提高编译速度往往是无所不用其极，pi...</p>
+            </section>
+            
+        </div>
+        
          
         <div class="read-next-item">
-            <a href="/%E7%BC%96%E7%A8%8B/c/c++/2014/02/14/clang-static-analyzer-with-jenkins-on-linux.html" class="read-next-link"></a>
+            <a href="/%E7%BC%96%E7%A8%8B/c/c++/2013/10/25/use-valgrind-memcheck-to-detect-memory-error-1.html" class="read-next-link"></a>
             <section>
-                <span>clang static analyzer with jenkins on linux</span>
-                <p>clang 是一个优秀的编译器，基于 clang 的 clang static anayler 静态检查工具也是开...</p>
+                <span>valgrind Memcheck 检测内存错误 - 使用</span>
+                <p>说到 Valgrind，C/C++ 程序员恐怕没有谁没听说过它，要是如此真是 out了。Valgrind 是一个测...</p>
             </section>
             
         </div>

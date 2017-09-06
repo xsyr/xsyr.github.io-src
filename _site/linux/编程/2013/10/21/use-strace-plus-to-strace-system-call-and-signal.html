@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>使用 strace+ 跟踪系统调用和信号 - xsyr的独立博客</title>
+    <meta name="author"  content="黄成林">
+    <meta name="description" content="使用 strace+ 跟踪系统调用和信号">
+    <meta name="keywords"  content="">
+    <!-- Open Graph -->
+    <meta property="og:title" content="使用 strace+ 跟踪系统调用和信号 - xsyr的独立博客">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://xsyr.github.io/linux/%E7%BC%96%E7%A8%8B/2013/10/21/use-strace-plus-to-strace-system-call-and-signal.html">
+    <meta property="og:description" content="经验源于爱折腾, 喜欢折腾各种新鲜玩意儿。">
+    <meta property="og:site_name" content="xsyr的独立博客">
+    <link rel="shortcut icon" href="/assets/img/favicon.ico">
+    <link rel="stylesheet" href="//cdn.staticfile.org/normalize/6.0.0/normalize.min.css">
+    <link rel="stylesheet" href="//at.alicdn.com/t/font_roc50gemkxpw4s4i.css">
+    <link rel="stylesheet" href="/assets/css/github-markdown.css">
+    <link rel="stylesheet" href="/assets/css/prism.css">
+    <link rel="stylesheet" href="/assets/css/share.min.css">
+    <link rel="stylesheet" href="/assets/css/app.min.css">
+</head>
+<body>
+    <!--[if lt IE 10]>
+<div class="alert-danger" role="alert">你的浏览器实在太太太旧了，放学别走，升级完浏览器再说！<a target="_blank" class="alert-link" href="http://browsehappy.com">立即升级</a></div>
+<![endif]-->
+<input id="nm-switch" type="hidden" value="false">
+
+<header class="g-header">
+    <div class="g-logo">
+        <a href="/"></a>
+    </div>
+    <i id="menu-toggle" class="iconfont icon-menu"></i>
+    <nav class="g-nav">
+        <ul>
+            
+            <li><a href="/">home</a></li>
+            
+            <li><a href="/tags.html">tags</a></li>
+            
+        </ul>
+    </nav>
+</header>
+
+
+<header class="g-banner post-header post-pattern-circuitBoard bgcolor-default post-no-cover" data-theme="default">
+    <div class="post-wrapper">
+        <div class="post-tags">
+            
+        </div>
+        <h1>使用 strace+ 跟踪系统调用和信号</h1>
+        <div class="post-meta">
+            <span class="post-meta-item"><i class="iconfont icon-author"></i><a href="https://xsyr.github.io" target="_blank" rel="author">黄成林</a></></span>
+            <time class="post-meta-item" datetime="13-10-21"><i class="iconfont icon-date"></i>21 Oct 2013</time>
+        </div>
+    </div>
+    
+</header>
+
+<div class="post-content">
+    
+    <article class="markdown-body">
+        <p>最近遇到了奇怪的现象，一个进程的物理内存使用量为 7MB 左右，但分配了
+250MB左右的地址空间，程序中没有映射大的文件。代码量太大，从源码找问题
+不现实，还好有 <a href="https://code.google.com/p/strace-plus/">strace+</a> 这神器，它可以跟踪系统调用和各种信号，它收集到的
+信息还能保持高可读性。相比 strace，strace+ 还能够记录系统调用的调用栈，这样
+可以方便的看出到底是谁调用了它。它也是分析源码和简单分析性能瓶颈的好工具。 <br />
+ptrace 函数是 strace 实现的关键，通过 ptrace 可以操作其他进程的内存，设置断点等。</p>
+<div class="language-c highlighter-rouge"><pre class="highlight"><code><span class="kt">long</span> <span class="n">ptrace</span><span class="p">(</span><span class="k">enum</span> <span class="n">__ptrace_request</span> <span class="n">request</span><span class="p">,</span> <span class="n">pid_t</span> <span class="n">pid</span><span class="p">,</span>
+                   <span class="kt">void</span> <span class="o">*</span><span class="n">addr</span><span class="p">,</span> <span class="kt">void</span> <span class="o">*</span><span class="n">data</span><span class="p">);</span>
+</code></pre>
+</div>
+<p>strace+ 源码托管在 googlecode 上，它的文档也没有
+同步更新。</p>
+
+<h2 id="安装">安装</h2>
+
+<div class="language-shell highlighter-rouge"><pre class="highlight"><code><span class="gp">$ </span>git clone https://code.google.com/p/strace-plus/
+<span class="gp">$ </span>autoreconf -f -i
+<span class="gp">$ </span>./configure
+<span class="gp">$ </span>make
+<span class="gp">$ </span>cp strace strace+
+</code></pre>
+</div>
+
+<p>编译生成的 strace+ 和 strace 的用法一样，但有件事在 <strong>Quick-start guide</strong> 没到提到，
+那就是如果想要 strace+ 生成带有调用栈的信息，必须指定 strace+ 的 -k 参数，否则效果
+会和 strace 一样。我为此折腾了好久，最后在 <a href="https://code.google.com/p/strace-plus/issues/detail?id=4">Quick-start guide should include ‘-k’</a>
+中找到答案(这算是开源软件的特点吧：缺乏文档。); )。</p>
+
+<p>先跑一下官网的 demo，执行</p>
+<div class="language-shell highlighter-rouge"><pre class="highlight"><code><span class="gp">$ </span>strace+ -o hello.out ./hello
+</code></pre>
+</div>
+
+<h3 id="解析-helloout-查看调用栈">解析 hello.out 查看调用栈</h3>
+<div class="language-shell highlighter-rouge"><pre class="highlight"><code><span class="gp">$ </span>python scripts/pretty_print_strace_out.py hello.out --trace
+</code></pre>
+</div>
+
+<h3 id="或者以树的形式查看调用栈">或者以树的形式查看调用栈</h3>
+<div class="language-shell highlighter-rouge"><pre class="highlight"><code><span class="gp">$ </span>python scripts/pretty_print_strace_out.py hello.out --tree
+</code></pre>
+</div>
+
+<!-- more -->
+
+<hr />
+
+<h2 id="使用">使用</h2>
+
+<p>strace+ 的使用方式如下：</p>
+<div class="language-shell highlighter-rouge"><pre class="highlight"><code><span class="gp">$ </span>strace <span class="o">[</span>-CdffhiqrtttTvVxxy] <span class="o">[</span>-In] <span class="o">[</span>-eexpr]... <span class="o">[</span>-acolumn] <span class="o">[</span>-ofile] <span class="o">[</span>-sstrsize] <span class="o">[</span>-Ppath]... -ppid... / <span class="o">[</span>-D] <span class="o">[</span>-Evar[<span class="o">=</span>val]]... <span class="o">[</span>-uusername] <span class="nb">command</span> <span class="o">[</span>args]
+
+<span class="gp">$ </span>strace -c[df] <span class="o">[</span>-In] <span class="o">[</span>-eexpr]... <span class="o">[</span>-Ooverhead] <span class="o">[</span>-Ssortby] -ppid... / <span class="o">[</span>-D] <span class="o">[</span>-Evar[<span class="o">=</span>val]]... <span class="o">[</span>-uusername] <span class="nb">command</span> <span class="o">[</span>args]
+</code></pre>
+</div>
+
+<h3 id="strace-常用选项">strace 常用选项</h3>
+
+<ul>
+  <li>
+    <p><strong>-p</strong>
+附加到指定的进程中。可以同时指定多个 -p 选项同时跟踪多个进程。按下 Ctrl+C 结束
+strace+ 结束对进程的跟踪并让它们继续运行。</p>
+  </li>
+  <li>
+    <p><strong>-c</strong>
+统计系统调用消耗的内核时间，调用次数，错误次数等。</p>
+  </li>
+  <li>
+    <p><strong>-f</strong>
+跟踪指定进程和它的子进程。</p>
+  </li>
+  <li>
+    <p><strong>-r</strong>
+进入系统调用时的相对时间戳。</p>
+  </li>
+  <li>
+    <p><strong>-T</strong>
+显示每个系统调用所话的时间。</p>
+  </li>
+  <li><strong>-e</strong>
+-e expr ：expr 指定要跟踪的内容，常见的有：
+    <ol>
+      <li>trace=open,!close
+表示跟踪 open，但不跟踪 close。</li>
+      <li>trace=file
+ 只跟踪和文件操作相关的调用。这样的类型还有 process, network, signal,
+ ipc, desc（和文件文件描述符相关的）。</li>
+      <li>signal=…
+ 跟踪和指定的信号。如 signal=SIGIO,!SIGTERM 。</li>
+      <li>read=… 将从指定描述符中读取的数据以十六进制和ASCII格式显示。如 -e read=
+ 3,5。</li>
+      <li>write=… 与read 类似。</li>
+    </ol>
+  </li>
+  <li>
+    <p><strong>-o</strong>
+将信息输出到指定的文件中。</p>
+  </li>
+  <li><strong>-E</strong>
+-E var=val  设置环境变量。
+-E var      移除环境变量。
+运行 command 指定的命令之前设置或移除环境变量。</li>
+</ul>
+
+<hr />
+
+<h2 id="应用场景">应用场景</h2>
+
+<p>可以参考下面的文章。</p>
+
+<ol>
+  <li><a href="http://www.thegeekstuff.com/2011/11/strace-examples/">7 Strace Examples to Debug the Execution of a Program in Linux</a></li>
+  <li><a href="http://doc.opensuse.org/documentation/html/openSUSE/opensuse-tuning/cha.tuning.tracing.html">Chapter 17. Tracing Tools</a></li>
+</ol>
+
+<hr />
+
+<h2 id="参考链接">参考链接</h2>
+<ol>
+  <li><a href="https://code.google.com/p/strace-plus/">strace-plus</a></li>
+  <li><a href="http://www.askapache.com/linux/building-strace-plus.html">Building strace-plus</a></li>
+</ol>
+
+    </article>
+    
+    <div class="social-share-wrapper">
+        <div class="social-share"></div>
+    </div>
+    
+</div>
+
+<section class="author-detail">
+    <section class="post-footer-item author-card">
+        <div class="avatar">
+            <img src="/assets/img/profile.jpg" alt="">
+        </div>
+        <div class="author-name" rel="author">黄成林</div>
+        <div class="bio">
+            <p>后端开发者，热爱技术，简单爱折腾</p>
+        </div>
+        
+        <ul class="sns-links">
+            
+            <li>
+                <a href="//github.com/xsyr" target="_blank">
+                    <i class="iconfont icon-github"></i>
+                </a>
+            </li>
+            
+        </ul>
+        
+    </section>
+    <section class="post-footer-item read-next">
+        
+        <div class="read-next-item">
+            <a href="/%E7%BC%96%E7%A8%8B/c/c++/2013/10/25/use-valgrind-memcheck-to-detect-memory-error-1.html" class="read-next-link"></a>
+            <section>
+                <span>valgrind Memcheck 检测内存错误 - 使用</span>
+                <p>说到 Valgrind，C/C++ 程序员恐怕没有谁没听说过它，要是如此真是 out了。Valgrind 是一个测...</p>
+            </section>
+            
+        </div>
+        
+         
+        <div class="read-next-item">
+            <a href="/%E7%BC%96%E7%A8%8B/c/c++/2013/10/15/duma-malloc-debugger.html" class="read-next-link"></a>
+            <section>
+                <span>使用 DUMA 检测 C++ 内存违规访问和内存泄漏</span>
+                <p>D.U.M.A 的全称是 Detect Unintended Memory Access，它是 Electric ...</p>
+            </section>
+            
+        </div>
+        
+    </section>
+    
+</section>
+
+<footer class="g-footer">
+    <section>xsyr的独立博客 © 2017</section>
+    <section>Powered by <a href="//jekyllrb.com">Jekyll</a> | <a href="https://github.com/kaeyleo/jekyll-theme-H2O">Theme H2O</a></section>
+</footer>
+
+<script src="/assets/js/social-share.min.js"></script>
+<script>
+    socialShare('.social-share', {
+        sites: ['wechat','weibo','douban','twitter'],
+        wechatQrcodeTitle: "分享到微信朋友圈",
+        wechatQrcodeHelper: '<p>扫码后点击右上角</p><p>将本文分享至朋友圈</p>'
+    });
+</script>
+<script>
+/**
+*  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+*  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables*/
+/*
+var disqus_config = function () {
+this.page.url = PAGE_URL;  // Replace PAGE_URL with your page's canonical URL variable
+this.page.identifier = PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+};
+*/
+(function() { // DON'T EDIT BELOW THIS LINE
+var d = document, s = d.createElement('script');
+/*写入自己的disqus信息*/
+s.src = '#';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<script src="https://cdn.staticfile.org/jquery/3.2.1/jquery.min.js"></script>
+<script src="/assets/js/prism.js"></script>
+<script src="/assets/js/index.min.js"></script>
+</body>
+</html>

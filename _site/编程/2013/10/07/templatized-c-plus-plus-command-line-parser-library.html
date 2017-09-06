@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TCLAP - templatized c++ command line parser library - xsyr的独立博客</title>
+    <meta name="author"  content="黄成林">
+    <meta name="description" content="TCLAP - templatized c++ command line parser library">
+    <meta name="keywords"  content="">
+    <!-- Open Graph -->
+    <meta property="og:title" content="TCLAP - templatized c++ command line parser library - xsyr的独立博客">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://xsyr.github.io/%E7%BC%96%E7%A8%8B/2013/10/07/templatized-c-plus-plus-command-line-parser-library.html">
+    <meta property="og:description" content="经验源于爱折腾, 喜欢折腾各种新鲜玩意儿。">
+    <meta property="og:site_name" content="xsyr的独立博客">
+    <link rel="shortcut icon" href="/assets/img/favicon.ico">
+    <link rel="stylesheet" href="//cdn.staticfile.org/normalize/6.0.0/normalize.min.css">
+    <link rel="stylesheet" href="//at.alicdn.com/t/font_roc50gemkxpw4s4i.css">
+    <link rel="stylesheet" href="/assets/css/github-markdown.css">
+    <link rel="stylesheet" href="/assets/css/prism.css">
+    <link rel="stylesheet" href="/assets/css/share.min.css">
+    <link rel="stylesheet" href="/assets/css/app.min.css">
+</head>
+<body>
+    <!--[if lt IE 10]>
+<div class="alert-danger" role="alert">你的浏览器实在太太太旧了，放学别走，升级完浏览器再说！<a target="_blank" class="alert-link" href="http://browsehappy.com">立即升级</a></div>
+<![endif]-->
+<input id="nm-switch" type="hidden" value="false">
+
+<header class="g-header">
+    <div class="g-logo">
+        <a href="/"></a>
+    </div>
+    <i id="menu-toggle" class="iconfont icon-menu"></i>
+    <nav class="g-nav">
+        <ul>
+            
+            <li><a href="/">home</a></li>
+            
+            <li><a href="/tags.html">tags</a></li>
+            
+        </ul>
+    </nav>
+</header>
+
+
+<header class="g-banner post-header post-pattern-circuitBoard bgcolor-default post-no-cover" data-theme="default">
+    <div class="post-wrapper">
+        <div class="post-tags">
+            
+        </div>
+        <h1>TCLAP - templatized c++ command line parser library</h1>
+        <div class="post-meta">
+            <span class="post-meta-item"><i class="iconfont icon-author"></i><a href="https://xsyr.github.io" target="_blank" rel="author">黄成林</a></></span>
+            <time class="post-meta-item" datetime="13-10-07"><i class="iconfont icon-date"></i>07 Oct 2013</time>
+        </div>
+    </div>
+    
+</header>
+
+<div class="post-content">
+    
+    <article class="markdown-body">
+        <p>最近写个小程序，需要解析命令好选项，找了好多 option Parser，对比
+<strong>getopt</strong>,
+<a href="http://code.google.com/p/gflags/">gflags</a>, <a href="http://www.hackorama.com/anyoption/">anyoption</a>,
+<a href="https://github.com/weisslj/cpp-optparse">option-parser</a>, <a href="https://gitorious.org/optionparser-cpp#more">optionparser-cpp</a>,
+<a href="http://mih.voxindeserto.de/argvparser.html#example">ArgvParser</a>,
+<a href="http://tclap.sourceforge.net/">TCLAP</a>，最终选择了TCLAP，它提供的基于模板的实现，
+简单灵活的接口比其他的 parser 更好用更容易扩展。此文为官方文档的精简版，方便以后
+查阅。来个 demo 粉墨登场：</p>
+
+<!-- more -->
+
+<div class="language-c++ highlighter-rouge"><pre class="highlight"><code>
+<span class="cp">#include &lt;string&gt;
+#include &lt;iostream&gt;
+#include &lt;algorithm&gt;
+#include &lt;tclap/CmdLine.h&gt;
+</span>
+<span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span><span class="o">**</span> <span class="n">argv</span><span class="p">)</span>
+<span class="p">{</span>
+
+    <span class="c1">// Wrap everything in a try block.  Do this every time,
+</span>    <span class="c1">// because exceptions will be thrown for problems.
+</span>    <span class="k">try</span> <span class="p">{</span>  
+
+        <span class="c1">// Define the command line object, and insert a message
+</span>        <span class="c1">// that describes the program. The "Command description message"
+</span>        <span class="c1">// is printed last in the help text. The second argument is the
+</span>        <span class="c1">// delimiter (usually space) and the last one is the version number.
+</span>        <span class="c1">// The CmdLine object parses the argv array based on the Arg objects
+</span>        <span class="c1">// that it contains.
+</span>        <span class="n">TCLAP</span><span class="o">::</span><span class="n">CmdLine</span> <span class="n">cmd</span><span class="p">(</span><span class="s">"Command description message"</span><span class="p">,</span> <span class="sc">' '</span><span class="p">,</span> <span class="s">"0.9"</span><span class="p">);</span>
+
+        <span class="c1">// Define a value argument and add it to the command line.
+</span>        <span class="c1">// A value arg defines a flag and a type of value that it expects,
+</span>        <span class="c1">// such as "-n Bishop".
+</span>        <span class="n">TCLAP</span><span class="o">::</span><span class="n">ValueArg</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span> <span class="n">nameArg</span><span class="p">(</span><span class="s">"n"</span><span class="p">,</span><span class="s">"name"</span><span class="p">,</span><span class="s">"Name to print"</span><span class="p">,</span><span class="nb">true</span><span class="p">,</span><span class="s">"homer"</span><span class="p">,</span><span class="s">"string"</span><span class="p">);</span>
+
+        <span class="c1">// Add the argument nameArg to the CmdLine object. The CmdLine object
+</span>        <span class="c1">// uses this Arg to parse the command line.
+</span>        <span class="n">cmd</span><span class="p">.</span><span class="n">add</span><span class="p">(</span> <span class="n">nameArg</span> <span class="p">);</span>
+
+        <span class="c1">// Define a switch and add it to the command line.
+</span>        <span class="c1">// A switch arg is a boolean argument and only defines a flag that
+</span>        <span class="c1">// indicates true or false.  In this example the SwitchArg adds itself
+</span>        <span class="c1">// to the CmdLine object as part of the constructor.  This eliminates
+</span>        <span class="c1">// the need to call the cmd.add() method.  All args have support in
+</span>        <span class="c1">// their constructors to add themselves directly to the CmdLine object.
+</span>        <span class="c1">// It doesn't matter which idiom you choose, they accomplish the same thing.
+</span>        <span class="n">TCLAP</span><span class="o">::</span><span class="n">SwitchArg</span> <span class="n">reverseSwitch</span><span class="p">(</span><span class="s">"r"</span><span class="p">,</span><span class="s">"reverse"</span><span class="p">,</span><span class="s">"Print name backwards"</span><span class="p">,</span> <span class="n">cmd</span><span class="p">,</span> <span class="nb">false</span><span class="p">);</span>
+
+        <span class="c1">// Parse the argv array.
+</span>        <span class="n">cmd</span><span class="p">.</span><span class="n">parse</span><span class="p">(</span> <span class="n">argc</span><span class="p">,</span> <span class="n">argv</span> <span class="p">);</span>
+
+        <span class="c1">// Get the value parsed by each arg.
+</span>        <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">name</span> <span class="o">=</span> <span class="n">nameArg</span><span class="p">.</span><span class="n">getValue</span><span class="p">();</span>
+        <span class="kt">bool</span> <span class="n">reverseName</span> <span class="o">=</span> <span class="n">reverseSwitch</span><span class="p">.</span><span class="n">getValue</span><span class="p">();</span>
+
+        <span class="c1">// Do what you intend.
+</span>        <span class="k">if</span> <span class="p">(</span> <span class="n">reverseName</span> <span class="p">)</span>
+        <span class="p">{</span>
+            <span class="n">std</span><span class="o">::</span><span class="n">reverse</span><span class="p">(</span><span class="n">name</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span><span class="n">name</span><span class="p">.</span><span class="n">end</span><span class="p">());</span>
+            <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">"My name (spelled backwards) is: "</span> <span class="o">&lt;&lt;</span> <span class="n">name</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="k">else</span>
+        <span class="p">{</span>
+            <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">"My name is: "</span> <span class="o">&lt;&lt;</span> <span class="n">name</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="k">catch</span> <span class="p">(</span><span class="n">TCLAP</span><span class="o">::</span><span class="n">ArgException</span> <span class="o">&amp;</span><span class="n">e</span><span class="p">)</span>  <span class="c1">// catch any exceptions
+</span>    <span class="p">{</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="s">"error: "</span> <span class="o">&lt;&lt;</span> <span class="n">e</span><span class="p">.</span><span class="n">error</span><span class="p">()</span> <span class="o">&lt;&lt;</span> <span class="s">" for arg "</span> <span class="o">&lt;&lt;</span> <span class="n">e</span><span class="p">.</span><span class="n">argId</span><span class="p">()</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span> <span class="p">}</span>
+    <span class="p">}</span>
+
+</code></pre>
+</div>
+
+<p>TCLAP 在头文件中实现，所以只需要引用 <code class="highlighter-rouge">c++ #include &lt;tclap/CmdLine.h&gt;</code>编译时使用
+ <strong>-I</strong> 选项添加头文件的路径。</p>
+
+<ol>
+  <li>创建 CmdLine 对象，提供简单的描述信息和版本信息。</li>
+  <li>创建需要的 option(如 ValueArg)并添加到 CmdLine对象中。或者在实例化 option时
+将 CmdLine当作参数传递到 option的构造函数中。两者等价。</li>
+  <li>CmdLine.parse 在解析 option对应的值时可能会抛出异常，所以必须放在 try 语句块中。</li>
+  <li>调用对应 option 的 getValue 方法获得解析后的值。</li>
+  <li>每种具名的 option 的构造函数都支持 短名(第一个参数)和长名(第二个参数)，
+并可提供描述信息和指定是否强制需要的，还可以提供默认值。</li>
+</ol>
+
+<p>具体的 API 详见<a href="http://tclap.sourceforge.net/html/annotated.html">参考手册</a>。</p>
+
+<hr />
+
+<h2 id="支持的-option-类型">支持的 option 类型</h2>
+
+<h3 id="1-switcharg">1. SwitchArg</h3>
+
+<p>具名的类型，是一种开关类型，它的 getValue 返回的是 boolean 类型。</p>
+
+<h3 id="2-valuearg">2. ValueArg</h3>
+
+<p>顾名思义，这是一种 <strong>option=value</strong> 的类型，比如 -o ./output.txt 或者 –output=
+./output.xml等。它是一个模板类 <strong>ValueArg&lt;T&gt; ** ，可以制定任意类型作为模板的参数，这种类型必须提供
+ **operator»</strong> 操作符，如果在解析命令行时这个操作符无法识别传递进去的字符串则抛出异常。
+默认支持 int, foat, double , string等内置类型。</p>
+
+<h3 id="3-multiarg">3. MultiArg</h3>
+
+<p>MultiArg 也是一个模板类 ** MultiArg&lt;T&gt; ** ，支持多个值的 ValueArg(如 gcc 的编译选项中的 <strong>-I</strong> 参数可以指定多个头文件的
+搜索路径一下样)，它的 getValue 方法会返回 <strong>std::vector&lt;T&gt;</strong> 。</p>
+
+<h3 id="4-multiswitcharg">4. MultiSwitchArg</h3>
+
+<p>MultiSwitchArg 类似 SwitchArg，但它的 getValue 不是返回 boolean，而是返回这个选项在命令行
+中出现的次数 ( 如 -v ， -vv 或者 -vvv )。它也可以提供默认值。</p>
+
+<h3 id="5-unlabeledvaluearg">5. UnlabeledValueArg</h3>
+
+<p>UnlabeledValueArg&lt;T&gt; 其实就是 getopt 中的 参数，它也是一个模板类。例如：</p>
+<div class="language-shell highlighter-rouge"><pre class="highlight"><code><span class="gp">$ </span>./app -o ouput -i input 123  45.6  abcd
+</code></pre>
+</div>
+
+<p>上面的 123， 45.6 和 abcd 分别对应的是 UnlabeledValueArg&lt;int&gt;,
+UnlabeledValueArg&lt;float&gt; 和 UnlabeledValueArg&lt;std::string&gt; 。它们被解析的顺序
+和它们出现在命令行中的顺序一样，如果将 abcd 放在 123 的前面会导致解析异常。</p>
+
+<h3 id="6-unlabeledmultiarg">6. UnlabeledMultiArg</h3>
+
+<p>UnlabeledMultiArg&lt;T&gt; 是一个模板类，它在程序中只能出现一次，因为它就是那些除了已经被解析
+为 UnlabeledValueArg 所剩下的参数，直到遇到 <strong>–</strong> 标识。而且这些参数必须能够被
+解析为对应的模板类型，如 UnlabeledMultiArg&lt;int&gt; 则要求这些参数必须能够解析成
+整型。它的 getValue 返回 <strong>std::vector&lt;T&gt;</strong></p>
+
+<div class="language-shell highlighter-rouge"><pre class="highlight"><code><span class="gp">$ </span>./app -o ouput -i input 123  45.6  abcd arg1 arg2 arg3
+</code></pre>
+</div>
+
+<p>上面的 arg1, arg2 和 arg3就被解析为 UnlabeledMultiArg&lt;std::string&gt;。</p>
+
+<hr />
+
+<h2 id="特殊需求">特殊需求</h2>
+
+<h3 id="1-多个参数只能指定其中一个">1. 多个参数只能指定其中一个</h3>
+
+<p>例如，想让 file 和 url 选项二选一：</p>
+
+<div class="language-c++ highlighter-rouge"><pre class="highlight"><code><span class="n">ValueArg</span><span class="o">&lt;</span><span class="n">string</span><span class="o">&gt;</span>  <span class="n">fileArg</span><span class="p">(</span><span class="s">"f"</span><span class="p">,</span><span class="s">"file"</span><span class="p">,</span><span class="s">"File name to read"</span><span class="p">,</span><span class="nb">true</span><span class="p">,</span><span class="s">"/dev/null"</span><span class="p">,</span> <span class="s">"filename"</span><span class="p">);</span>
+<span class="n">ValueArg</span><span class="o">&lt;</span><span class="n">string</span><span class="o">&gt;</span>  <span class="n">urlArg</span><span class="p">(</span><span class="s">"u"</span><span class="p">,</span><span class="s">"url"</span><span class="p">,</span><span class="s">"URL to load"</span><span class="p">,</span><span class="nb">true</span><span class="p">,</span> <span class="s">"http://example.com"</span><span class="p">,</span> <span class="s">"URL"</span><span class="p">);</span>
+
+<span class="n">cmd</span><span class="p">.</span><span class="n">xorAdd</span><span class="p">(</span> <span class="n">fileArg</span><span class="p">,</span> <span class="n">urlArg</span> <span class="p">);</span>
+<span class="n">cmd</span><span class="p">.</span><span class="n">parse</span><span class="p">(</span><span class="n">argc</span><span class="p">,</span> <span class="n">argv</span><span class="p">);</span>
+</code></pre>
+</div>
+
+<p>然后就可以通过 fileArg 和 urlArg 的 isSet() 检查到底是哪个选项被设置了。</p>
+
+<p>它可以多于两个 option并且是不同类型的 option：</p>
+
+<div class="language-c++ highlighter-rouge"><pre class="highlight"><code><span class="n">SwitchArg</span>  <span class="n">stdinArg</span><span class="p">(</span><span class="s">"s"</span><span class="p">,</span> <span class="s">"stdin"</span><span class="p">,</span> <span class="s">"Read from STDIN"</span><span class="p">,</span> <span class="nb">false</span><span class="p">);</span>
+<span class="n">ValueArg</span><span class="o">&lt;</span><span class="n">string</span><span class="o">&gt;</span>  <span class="n">fileArg</span><span class="p">(</span><span class="s">"f"</span><span class="p">,</span><span class="s">"file"</span><span class="p">,</span><span class="s">"File name to read"</span><span class="p">,</span><span class="nb">true</span><span class="p">,</span><span class="s">"/dev/null"</span><span class="p">,</span> <span class="s">"filename"</span><span class="p">);</span>
+<span class="n">ValueArg</span><span class="o">&lt;</span><span class="n">string</span><span class="o">&gt;</span>  <span class="n">urlArg</span><span class="p">(</span><span class="s">"u"</span><span class="p">,</span><span class="s">"url"</span><span class="p">,</span><span class="s">"URL to load"</span><span class="p">,</span><span class="nb">true</span><span class="p">,</span> <span class="s">"http://example.com"</span><span class="p">,</span> <span class="s">"URL"</span><span class="p">);</span>
+
+<span class="n">vector</span><span class="o">&lt;</span><span class="n">Arg</span><span class="o">*&gt;</span>  <span class="n">xorlist</span><span class="p">;</span>
+<span class="n">xorlist</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="o">&amp;</span><span class="n">stdinArg</span><span class="p">);</span>
+<span class="n">xorlist</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="o">&amp;</span><span class="n">fileArg</span><span class="p">);</span>
+<span class="n">xorlist</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="o">&amp;</span><span class="n">urlArg</span><span class="p">);</span>
+
+<span class="n">cmd</span><span class="p">.</span><span class="n">xorAdd</span><span class="p">(</span> <span class="n">xorlist</span> <span class="p">);</span>
+</code></pre>
+</div>
+
+<h3 id="2-只支持长名的option">2. 只支持长名的option</h3>
+
+<p>只要在 option 的构造函数的短名参数中复制空串(““)即可：</p>
+<div class="language-c++ highlighter-rouge"><pre class="highlight"><code><span class="n">ValueArg</span><span class="o">&lt;</span><span class="n">string</span><span class="o">&gt;</span>  <span class="n">fileArg</span><span class="p">(</span><span class="s">""</span><span class="p">,</span><span class="s">"file"</span><span class="p">,</span><span class="s">"File name"</span><span class="p">,</span><span class="nb">true</span><span class="p">,</span><span class="s">"homer"</span><span class="p">,</span><span class="s">"filename"</span><span class="p">);</span>
+
+<span class="n">SwitchArg</span>  <span class="n">caseSwitch</span><span class="p">(</span><span class="s">""</span><span class="p">,</span><span class="s">"upperCase"</span><span class="p">,</span><span class="s">"Print in upper case"</span><span class="p">,</span><span class="nb">false</span><span class="p">);</span>
+</code></pre>
+</div>
+
+<h3 id="3-为-valuearg-指定枚举值">3. 为 ValueArg 指定枚举值</h3>
+<div class="language-c++ highlighter-rouge"><pre class="highlight"><code><span class="n">vector</span><span class="o">&lt;</span><span class="n">string</span><span class="o">&gt;</span> <span class="n">allowed</span><span class="p">;</span>
+<span class="n">allowed</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="s">"homer"</span><span class="p">);</span>
+<span class="n">allowed</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="s">"marge"</span><span class="p">);</span>
+<span class="n">allowed</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="s">"bart"</span><span class="p">);</span>
+<span class="n">allowed</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="s">"lisa"</span><span class="p">);</span>
+<span class="n">allowed</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="s">"maggie"</span><span class="p">);</span>
+<span class="n">ValuesConstraint</span><span class="o">&lt;</span><span class="n">string</span><span class="o">&gt;</span> <span class="n">allowedVals</span><span class="p">(</span> <span class="n">allowed</span> <span class="p">);</span>
+
+<span class="n">ValueArg</span><span class="o">&lt;</span><span class="n">string</span><span class="o">&gt;</span> <span class="n">nameArg</span><span class="p">(</span><span class="s">"n"</span><span class="p">,</span><span class="s">"name"</span><span class="p">,</span><span class="s">"Name to print"</span><span class="p">,</span><span class="nb">true</span><span class="p">,</span><span class="s">"homer"</span><span class="p">,</span><span class="o">&amp;</span><span class="n">allowedVals</span><span class="p">);</span>
+<span class="n">cmd</span><span class="p">.</span><span class="n">add</span><span class="p">(</span> <span class="n">nameArg</span> <span class="p">);</span>
+</code></pre>
+</div>
+
+<p>如果 ValuesConstrant 不满足需求，可以自己实现 Constraint&lt;T&gt; 接口。</p>
+
+<h3 id="4-为-整型option-指定-十六进制的值">4. 为 整型option 指定 十六进制的值</h3>
+
+<p>在 <code class="highlighter-rouge">c++ #include &lt;tclap/CmdLine.h&gt;</code> 前定义 TCLAP_SETBASE_ZERO
+宏。</p>
+
+<div class="language-c++ highlighter-rouge"><pre class="highlight"><code><span class="cp">#define TCLAP_SETBASE_ZERO 1
+</span>
+<span class="cp">#include &lt;tclap/CmdLine.h&gt;
+</span></code></pre>
+</div>
+
+    </article>
+    
+    <div class="social-share-wrapper">
+        <div class="social-share"></div>
+    </div>
+    
+</div>
+
+<section class="author-detail">
+    <section class="post-footer-item author-card">
+        <div class="avatar">
+            <img src="/assets/img/profile.jpg" alt="">
+        </div>
+        <div class="author-name" rel="author">黄成林</div>
+        <div class="bio">
+            <p>后端开发者，热爱技术，简单爱折腾</p>
+        </div>
+        
+        <ul class="sns-links">
+            
+            <li>
+                <a href="//github.com/xsyr" target="_blank">
+                    <i class="iconfont icon-github"></i>
+                </a>
+            </li>
+            
+        </ul>
+        
+    </section>
+    <section class="post-footer-item read-next">
+        
+        <div class="read-next-item">
+            <a href="/%E7%BC%96%E7%A8%8B/2013/10/09/use-memusage-to-collect-memory-usage-info.html" class="read-next-link"></a>
+            <section>
+                <span>使用 memusage 统计内存使用情况</span>
+                <p>glibc 自带了一个 libmemusage 的库，用于收集应用程序运行时的内存使用情况。使用起来很简单，只要在...</p>
+            </section>
+            
+        </div>
+        
+         
+        <div class="read-next-item">
+            <a href="/%E7%BC%96%E7%A8%8B/2013/09/26/write-an-reliability-event-loop.html" class="read-next-link"></a>
+            <section>
+                <span>编写可靠的事件循环</span>
+                <p>今天遇到一个奇怪的问题，在与其他子系统交互的 Session 中，在发送某个类型的 Message 之后，发送线程...</p>
+            </section>
+            
+        </div>
+        
+    </section>
+    
+</section>
+
+<footer class="g-footer">
+    <section>xsyr的独立博客 © 2017</section>
+    <section>Powered by <a href="//jekyllrb.com">Jekyll</a> | <a href="https://github.com/kaeyleo/jekyll-theme-H2O">Theme H2O</a></section>
+</footer>
+
+<script src="/assets/js/social-share.min.js"></script>
+<script>
+    socialShare('.social-share', {
+        sites: ['wechat','weibo','douban','twitter'],
+        wechatQrcodeTitle: "分享到微信朋友圈",
+        wechatQrcodeHelper: '<p>扫码后点击右上角</p><p>将本文分享至朋友圈</p>'
+    });
+</script>
+<script>
+/**
+*  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+*  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables*/
+/*
+var disqus_config = function () {
+this.page.url = PAGE_URL;  // Replace PAGE_URL with your page's canonical URL variable
+this.page.identifier = PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+};
+*/
+(function() { // DON'T EDIT BELOW THIS LINE
+var d = document, s = d.createElement('script');
+/*写入自己的disqus信息*/
+s.src = '#';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<script src="https://cdn.staticfile.org/jquery/3.2.1/jquery.min.js"></script>
+<script src="/assets/js/prism.js"></script>
+<script src="/assets/js/index.min.js"></script>
+</body>
+</html>

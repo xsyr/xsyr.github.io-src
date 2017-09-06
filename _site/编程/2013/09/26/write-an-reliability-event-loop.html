@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>编写可靠的事件循环 - xsyr的独立博客</title>
+    <meta name="author"  content="黄成林">
+    <meta name="description" content="编写可靠的事件循环">
+    <meta name="keywords"  content="编程">
+    <!-- Open Graph -->
+    <meta property="og:title" content="编写可靠的事件循环 - xsyr的独立博客">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://xsyr.github.io/%E7%BC%96%E7%A8%8B/2013/09/26/write-an-reliability-event-loop.html">
+    <meta property="og:description" content="经验源于爱折腾, 喜欢折腾各种新鲜玩意儿。">
+    <meta property="og:site_name" content="xsyr的独立博客">
+    <link rel="shortcut icon" href="/assets/img/favicon.ico">
+    <link rel="stylesheet" href="//cdn.staticfile.org/normalize/6.0.0/normalize.min.css">
+    <link rel="stylesheet" href="//at.alicdn.com/t/font_roc50gemkxpw4s4i.css">
+    <link rel="stylesheet" href="/assets/css/github-markdown.css">
+    <link rel="stylesheet" href="/assets/css/prism.css">
+    <link rel="stylesheet" href="/assets/css/share.min.css">
+    <link rel="stylesheet" href="/assets/css/app.min.css">
+</head>
+<body>
+    <!--[if lt IE 10]>
+<div class="alert-danger" role="alert">你的浏览器实在太太太旧了，放学别走，升级完浏览器再说！<a target="_blank" class="alert-link" href="http://browsehappy.com">立即升级</a></div>
+<![endif]-->
+<input id="nm-switch" type="hidden" value="false">
+
+<header class="g-header">
+    <div class="g-logo">
+        <a href="/"></a>
+    </div>
+    <i id="menu-toggle" class="iconfont icon-menu"></i>
+    <nav class="g-nav">
+        <ul>
+            
+            <li><a href="/">home</a></li>
+            
+            <li><a href="/tags.html">tags</a></li>
+            
+        </ul>
+    </nav>
+</header>
+
+
+<header class="g-banner post-header post-pattern-circuitBoard bgcolor-default post-no-cover" data-theme="default">
+    <div class="post-wrapper">
+        <div class="post-tags">
+             
+            
+            <a href="tags#编程" class="post-tag">编程</a>
+            
+            
+        </div>
+        <h1>编写可靠的事件循环</h1>
+        <div class="post-meta">
+            <span class="post-meta-item"><i class="iconfont icon-author"></i><a href="https://xsyr.github.io" target="_blank" rel="author">黄成林</a></></span>
+            <time class="post-meta-item" datetime="13-09-26"><i class="iconfont icon-date"></i>26 Sep 2013</time>
+        </div>
+    </div>
+    
+</header>
+
+<div class="post-content">
+    
+    <article class="markdown-body">
+        <p>今天遇到一个奇怪的问题，在与其他子系统交互的 Session 中，在发送某个
+类型的 <strong>Message</strong> 之后，发送线程超时返回了，接收线程也没有收到任 何<strong>Message</strong> 。子系统的
+Session 是这样实现的，我们的子系统 <strong>A</strong> 作为服务器端，上电后等待其他子系统连接上来
+并创建对应的 Session <strong>B</strong>。Session 使用两个共享内存的缓冲区分别作为发送和接受的缓冲区，
+接收线程使用使用中断的方式等待 <strong>Message</strong> 到来;由于技术上的限制，发送线程使用论询握手位
+的方式等待对方的接收缓冲区转变为空闲才能往缓冲区写数据并发出中断。</p>
+
+<p><img src="/assets/img/session-impl.png" alt="session-impl" /></p>
+
+<!-- more -->
+
+<p>交互的协议规定，发送一个 <strong>Message</strong> 之后必须等到对方回应才能接续发另外的 <strong>Message</strong>，
+所以这其实是一种半双工的实现。这样，<strong>A</strong> 的发送线程 <strong>TSend</strong> 在发出一个带有序列号的 <strong>Message</strong> 之后，
+发出中断。之后会隔某个时间去获取接收队列RL的锁并查找是否有对应序列号的 <strong>Message</strong>，
+如果没有则在条件变量RLC上等待并放开RL锁。直到超时或<strong>B</strong>返回的带有相同序列号的 <strong>Message</strong> 才算完成一次交互。</p>
+
+<p>为了防止 <strong>A</strong> 在等待回应 <strong>Message</strong> 的过程中错过<strong>B</strong>主动上报的 <strong>Message</strong>，<strong>A</strong> 的接受线程 <strong>TRecv</strong> 在收到 <strong>Message</strong> 后
+获取 RL锁，并将 <strong>Message</strong> 放到一个队列中，通知RLC并释放RL锁。</p>
+
+<p>但 是<strong>A</strong> 在收到某个类型的 <strong>Message</strong> 之后需要调用特殊的处理函数，这个特殊处理函数在做
+很深的嵌套调用之后需要将一个 <strong>Message</strong> 发送给 <strong>B</strong>。问题就出现在这里，处理函数由 <strong>TRecv</strong>
+来执行，但在发送 <strong>Message</strong> 给 <strong>B</strong> 时它自己又充当了 <strong>TSend</strong> 的角色，这 样<strong>TSend</strong> 在等待 <strong>B</strong> 返回对应
+ <strong>Message</strong> 时已经阻塞了，其实是<strong>TRecv</strong>阻塞住了，这样即使<strong>B</strong>收到<strong>TSend</strong>发出的 <strong>Message</strong>，返回
+对应 的<strong>Message</strong> 给 <strong>A</strong> 并发送中断之后，<strong>A</strong> 已经没有线程来处理这个中断了，导致 <strong>TSend</strong>（<strong>TRecv</strong>）超时
+返回之后才有线程处理中断。</p>
+
+<hr />
+
+<h2 id="这样实现的缺点">这样实现的缺点</h2>
+
+<ol>
+  <li>
+    <p>虽然 <strong>A</strong> 与其他子系统的交互不频繁，这样实现也不会有什么瓶颈，但是用接收线程 <strong>TRecv</strong>
+做业务逻辑实在是不妥，它应该负责解包并向上提交就够了。</p>
+  </li>
+  <li>
+    <p>这里才是致命的，<strong>TRecv</strong> 不仅仅充当了解包的任务，在完成业务逻辑的时候不知
+不觉的又扮演了 <strong>TSend</strong> 的角色，这很容易发生死锁，死锁在多线程环境中是除了名的难题。
+在使用像 <strong>Windows IO Completion</strong> 这样的异步收发机制里，这个问题会更加的隐蔽。</p>
+  </li>
+</ol>
+
+<hr />
+
+<h2 id="这样实现比较好">这样实现比较好</h2>
+
+<p><strong>TRecv</strong> 在收到 <strong>Message</strong> 之后将它发给消息队列，自己之负责接收 <strong>Message</strong> 并
+送入消息队列。消息队列那边的事件循环负责消息的分发与执行业务逻辑。这样的职责划分能
+带来很多好处。</p>
+
+<p>在高并发的场景里，<strong>TRecv</strong> 负责调用 <strong>IOCP</strong> 或 <strong>epoll</strong> 的异步 API。消息队列之后也可以
+放置负载均衡模块。这样 <strong>TRecv</strong> 在处理“短命”的连接时效率会高很多。</p>
+
+<p><img src="/assets/img/session-with-mq-impl.png" alt="session-impl" /></p>
+
+    </article>
+    
+    <div class="social-share-wrapper">
+        <div class="social-share"></div>
+    </div>
+    
+</div>
+
+<section class="author-detail">
+    <section class="post-footer-item author-card">
+        <div class="avatar">
+            <img src="/assets/img/profile.jpg" alt="">
+        </div>
+        <div class="author-name" rel="author">黄成林</div>
+        <div class="bio">
+            <p>后端开发者，热爱技术，简单爱折腾</p>
+        </div>
+        
+        <ul class="sns-links">
+            
+            <li>
+                <a href="//github.com/xsyr" target="_blank">
+                    <i class="iconfont icon-github"></i>
+                </a>
+            </li>
+            
+        </ul>
+        
+    </section>
+    <section class="post-footer-item read-next">
+        
+        <div class="read-next-item">
+            <a href="/%E7%BC%96%E7%A8%8B/2013/10/07/templatized-c-plus-plus-command-line-parser-library.html" class="read-next-link"></a>
+            <section>
+                <span>TCLAP - templatized c++ command line parser library</span>
+                <p>最近写个小程序，需要解析命令好选项，找了好多 option Parser，对比getopt,gflags, any...</p>
+            </section>
+            
+        </div>
+        
+         
+        <div class="read-next-item">
+            <a href="/vim/2013/09/21/make-vim-as-c-plus-plus-ide.html" class="read-next-link"></a>
+            <section>
+                <span>Make Vim as C/C++ IDE</span>
+                <p>编辑器之神</p>
+            </section>
+            
+        </div>
+        
+    </section>
+    
+</section>
+
+<footer class="g-footer">
+    <section>xsyr的独立博客 © 2017</section>
+    <section>Powered by <a href="//jekyllrb.com">Jekyll</a> | <a href="https://github.com/kaeyleo/jekyll-theme-H2O">Theme H2O</a></section>
+</footer>
+
+<script src="/assets/js/social-share.min.js"></script>
+<script>
+    socialShare('.social-share', {
+        sites: ['wechat','weibo','douban','twitter'],
+        wechatQrcodeTitle: "分享到微信朋友圈",
+        wechatQrcodeHelper: '<p>扫码后点击右上角</p><p>将本文分享至朋友圈</p>'
+    });
+</script>
+<script>
+/**
+*  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+*  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables*/
+/*
+var disqus_config = function () {
+this.page.url = PAGE_URL;  // Replace PAGE_URL with your page's canonical URL variable
+this.page.identifier = PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+};
+*/
+(function() { // DON'T EDIT BELOW THIS LINE
+var d = document, s = d.createElement('script');
+/*写入自己的disqus信息*/
+s.src = '#';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<script src="https://cdn.staticfile.org/jquery/3.2.1/jquery.min.js"></script>
+<script src="/assets/js/prism.js"></script>
+<script src="/assets/js/index.min.js"></script>
+</body>
+</html>

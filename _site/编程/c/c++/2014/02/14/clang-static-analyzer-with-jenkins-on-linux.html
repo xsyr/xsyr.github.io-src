@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>clang static analyzer with jenkins on linux - xsyr的独立博客</title>
+    <meta name="author"  content="黄成林">
+    <meta name="description" content="clang static analyzer with jenkins on linux">
+    <meta name="keywords"  content="">
+    <!-- Open Graph -->
+    <meta property="og:title" content="clang static analyzer with jenkins on linux - xsyr的独立博客">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://xsyr.github.io/%E7%BC%96%E7%A8%8B/c/c++/2014/02/14/clang-static-analyzer-with-jenkins-on-linux.html">
+    <meta property="og:description" content="经验源于爱折腾, 喜欢折腾各种新鲜玩意儿。">
+    <meta property="og:site_name" content="xsyr的独立博客">
+    <link rel="shortcut icon" href="/assets/img/favicon.ico">
+    <link rel="stylesheet" href="//cdn.staticfile.org/normalize/6.0.0/normalize.min.css">
+    <link rel="stylesheet" href="//at.alicdn.com/t/font_roc50gemkxpw4s4i.css">
+    <link rel="stylesheet" href="/assets/css/github-markdown.css">
+    <link rel="stylesheet" href="/assets/css/prism.css">
+    <link rel="stylesheet" href="/assets/css/share.min.css">
+    <link rel="stylesheet" href="/assets/css/app.min.css">
+</head>
+<body>
+    <!--[if lt IE 10]>
+<div class="alert-danger" role="alert">你的浏览器实在太太太旧了，放学别走，升级完浏览器再说！<a target="_blank" class="alert-link" href="http://browsehappy.com">立即升级</a></div>
+<![endif]-->
+<input id="nm-switch" type="hidden" value="false">
+
+<header class="g-header">
+    <div class="g-logo">
+        <a href="/"></a>
+    </div>
+    <i id="menu-toggle" class="iconfont icon-menu"></i>
+    <nav class="g-nav">
+        <ul>
+            
+            <li><a href="/">home</a></li>
+            
+            <li><a href="/tags.html">tags</a></li>
+            
+        </ul>
+    </nav>
+</header>
+
+
+<header class="g-banner post-header post-pattern-circuitBoard bgcolor-default post-no-cover" data-theme="default">
+    <div class="post-wrapper">
+        <div class="post-tags">
+            
+        </div>
+        <h1>clang static analyzer with jenkins on linux</h1>
+        <div class="post-meta">
+            <span class="post-meta-item"><i class="iconfont icon-author"></i><a href="https://xsyr.github.io" target="_blank" rel="author">黄成林</a></></span>
+            <time class="post-meta-item" datetime="14-02-14"><i class="iconfont icon-date"></i>14 Feb 2014</time>
+        </div>
+    </div>
+    
+</header>
+
+<div class="post-content">
+    
+    <article class="markdown-body">
+        <p>clang 是一个优秀的编译器，基于 clang 的 clang static anayler 静态检查工具也是
+开发过程中不可缺少的。这里介绍在 jenkins 集成 clang static analyer 的方法。</p>
+
+<h2 id="安装">安装</h2>
+<p>安装请参考 <a href="http://xinsuiyuer.github.io/blog/2014/01/12/clang-static-analyzer/">Clang Static Analyzer - 静态代码分析工具</a>。</p>
+
+<h2 id="安装-clang-scanbuild-plugin-插件">安装 clang-scanbuild-plugin 插件</h2>
+<p>安装过程很简单，在 jenkins 插件管理页面就可以方便的安装，
+<code class="highlighter-rouge">http://your-jenkins-ci-server/pluginManager/available</code>。</p>
+
+<!-- more -->
+
+<h2 id="配置-clang-scanbuild-plugin">配置 clang-scanbuild-plugin</h2>
+<p>由于 clang-scanbuild-plugin 只支持 Mac 平台，在 linux 上需要做一些修改。</p>
+<ol>
+  <li>
+    <p>首先配置 clang-scanbuild-plugin<br />
+进入 <code class="highlighter-rouge">http://your-jenkins-ci-server/configure</code>，找到 <em>Clang Static Analyzer installations</em>，
+设置 scan-build 所在的路径。 <br />
+Name 填 scan-build  <br />
+Installation directory 填写 scan-build 所在的路径。  <br />
+保存</p>
+  </li>
+  <li>
+    <p>添加项目的 scan-build 构建步骤
+进入项目的配置页面， <em>Add build step</em> 选择 <em>Clang Scan-Build</em> ，  <br />
+在这里会看到 <em>Clang scan-build installation</em> 自动选择前面配置的 <em>scan-build</em> 的安装配置信息。  <br />
+<em>Additional scan-build arguments</em> 填 <code class="highlighter-rouge">--use-analyzer=/usr/bin/clang -enable-checker alpha -enable-checker core -enable-checker security -enable-checker unix</code>。</p>
+  </li>
+  <li>
+    <p>修改 scan-build 源码
+因为 <em>clang-scanbuild-plugin</em> 只支持 <em>XCode</em> ，所以必须对源码进行修改使其能在 linux
+ 上工作。步骤如下：</p>
+  </li>
+</ol>
+
+<p>一是禁用 scan-build 的 -v 参数， <em>clang-scanbuild-plugin</em> 插件默认添加了这个参数，
+导致在执行代码检查时 <em>Console Output</em> 充斥太多的执行细节，我们不需要这么详细。  <br />
+打开 scan-build，屏蔽处理 -v 参数的语句，将</p>
+<div class="language-perl highlighter-rouge"><pre class="highlight"><code>  <span class="k">if</span> <span class="p">(</span><span class="nv">$arg</span> <span class="ow">eq</span> <span class="s">"-v"</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nb">shift</span> <span class="nv">@ARGV</span><span class="p">;</span>
+    <span class="nv">$Verbose</span><span class="o">++</span><span class="p">;</span>
+    <span class="k">next</span><span class="p">;</span>
+  <span class="p">}</span>
+</code></pre>
+</div>
+
+<p>改为</p>
+
+<div class="language-perl highlighter-rouge"><pre class="highlight"><code>  <span class="k">if</span> <span class="p">(</span><span class="nv">$arg</span> <span class="ow">eq</span> <span class="s">"-v"</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nb">shift</span> <span class="nv">@ARGV</span><span class="p">;</span>
+      <span class="c1">#$Verbose++;</span>
+    <span class="k">next</span><span class="p">;</span>
+  <span class="p">}</span>
+</code></pre>
+</div>
+
+<hr />
+
+<p>二是禁止其执行 xcodebuild 命令。在 <em>RunBuildCommand</em> 函数中将</p>
+<div class="language-perl highlighter-rouge"><pre class="highlight"><code>  <span class="k">my</span> <span class="nv">$IgnoreErrors</span> <span class="o">=</span> <span class="nb">shift</span><span class="p">;</span>
+  <span class="k">my</span> <span class="nv">$Cmd</span> <span class="o">=</span> <span class="nv">$Args</span><span class="o">-&gt;</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+  <span class="k">my</span> <span class="nv">$CCAnalyzer</span> <span class="o">=</span> <span class="nb">shift</span><span class="p">;</span>
+</code></pre>
+</div>
+
+<p>改为</p>
+
+<div class="language-perl highlighter-rouge"><pre class="highlight"><code>  <span class="k">my</span> <span class="nv">$IgnoreErrors</span> <span class="o">=</span> <span class="nb">shift</span><span class="p">;</span>
+  <span class="c1">#my $Cmd = $Args-&gt;[0];</span>
+  <span class="k">my</span> <span class="nv">$Cmd</span> <span class="o">=</span> <span class="s">"make"</span><span class="p">;</span>
+  <span class="k">my</span> <span class="nv">$CCAnalyzer</span> <span class="o">=</span> <span class="nb">shift</span><span class="p">;</span>
+</code></pre>
+</div>
+
+<div class="language-perl highlighter-rouge"><pre class="highlight"><code>  <span class="k">return</span> <span class="p">(</span><span class="nb">system</span><span class="p">(</span><span class="nv">@$Args</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="mi">8</span><span class="p">);</span>
+</code></pre>
+</div>
+
+<p>改为</p>
+
+<div class="language-perl highlighter-rouge"><pre class="highlight"><code>  <span class="nb">chdir</span><span class="p">(</span><span class="s">"scan-build-dir"</span><span class="p">);</span>
+  <span class="k">return</span> <span class="p">(</span><span class="nb">system</span><span class="p">(</span><span class="s">"make -B"</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="mi">8</span><span class="p">);</span>
+</code></pre>
+</div>
+
+<hr />
+
+<p>三是为 scan-build 准备编译目录和 <em>Makefile</em>。这一步是在项目的配置页面的 <em><code class="highlighter-rouge">Execute Shell</code></em>
+中添加脚本命令：</p>
+<div class="language-shell highlighter-rouge"><pre class="highlight"><code><span class="gp">$ </span>mkdir -p scan-build-dir
+<span class="gp">$ </span><span class="nb">cd </span>scan-build-dir
+<span class="gp">$ </span>cmake -DCMAKE_C_COMPILER<span class="o">=</span>ccc-analyzer -DCMAKE_CXX_COMPILER<span class="o">=</span>c++-analyzer -DCMAKE_C_FLAGS<span class="o">=</span><span class="s2">" -c "</span> -DCMAKE_CXX_FLAGS<span class="o">=</span><span class="s2">" -c "</span> ..
+</code></pre>
+</div>
+
+<p>注意这一步与上一步提到的 <code class="highlighter-rouge">chdir("scan-build-dir");</code> 目录相对应。</p>
+
+<h2 id="着色-make-的输出信息">着色 make 的输出信息</h2>
+<p>CMake 在选择 Unix Makefile 生成器时，如果当前的终端是 tty 类型，则默认会着色当前的编译进度。
+但是 <em>clang-scanbuild-plugin</em> 重定向了输出信息，而它不是 tty 类型的终端，所以不再有着色的进度信息。</p>
+
+<p>首先安装 <em>AnsiColor</em> 插件</p>
+
+<p>然后欺骗 CMake，告诉它现在是 tty 类型的终端，这里使用 <em>LD_PRELOAD</em> 进行 <em>API Hook</em>。</p>
+
+<p>编写如下代码：</p>
+<div class="language-c highlighter-rouge"><pre class="highlight"><code><span class="cm">/**
+ * Overrides the glibc function. Will always return true.
+ *
+ * Note: Although this should be ok for most applications it can
+ * lead to unwanted side effects. It depends on the question
+ * why the programm calls isatty()
+ */</span>
+<span class="kt">int</span> <span class="nf">isatty</span><span class="p">(</span><span class="kt">int</span> <span class="n">param</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre>
+</div>
+
+<p>将上面的代码编译为 <em>libisatty.so</em>。</p>
+
+<p>最后修改 <em>scan-build</em> 的源码</p>
+<div class="language-perl highlighter-rouge"><pre class="highlight"><code>  <span class="nb">chdir</span><span class="p">(</span><span class="s">"scan-build-dir"</span><span class="p">);</span>
+  <span class="k">return</span> <span class="p">(</span><span class="nb">system</span><span class="p">(</span><span class="s">"make -B"</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="mi">8</span><span class="p">);</span>
+</code></pre>
+</div>
+
+<p>改为</p>
+
+<div class="language-perl highlighter-rouge"><pre class="highlight"><code>  <span class="nb">chdir</span><span class="p">(</span><span class="s">"scan-build-dir"</span><span class="p">);</span>
+  <span class="k">return</span> <span class="p">(</span><span class="nb">system</span><span class="p">(</span><span class="s">"LD_PRELOAD=/path/to/libisatty.so make -B"</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="mi">8</span><span class="p">);</span>
+</code></pre>
+</div>
+
+<p>大功告成！！！！</p>
+
+    </article>
+    
+    <div class="social-share-wrapper">
+        <div class="social-share"></div>
+    </div>
+    
+</div>
+
+<section class="author-detail">
+    <section class="post-footer-item author-card">
+        <div class="avatar">
+            <img src="/assets/img/profile.jpg" alt="">
+        </div>
+        <div class="author-name" rel="author">黄成林</div>
+        <div class="bio">
+            <p>后端开发者，热爱技术，简单爱折腾</p>
+        </div>
+        
+        <ul class="sns-links">
+            
+            <li>
+                <a href="//github.com/xsyr" target="_blank">
+                    <i class="iconfont icon-github"></i>
+                </a>
+            </li>
+            
+        </ul>
+        
+    </section>
+    <section class="post-footer-item read-next">
+        
+        <div class="read-next-item">
+            <a href="/markdown/2017/09/06/atom-markdown-plugins.html" class="read-next-link"></a>
+            <section>
+                <span>Atom + Github Pages markdown 插件安装</span>
+                <p>在 VIM 里写 markdown 真的不太方便，特别是要贴图的时。Atom 的几个插件可以帮助我们快捷的写mar...</p>
+            </section>
+            
+            <div class="filter"></div>
+            <img src="/assets/img/atom-markdown-editor-effect.png" alt="">
+            
+        </div>
+        
+         
+        <div class="read-next-item">
+            <a href="/%E7%BC%96%E7%A8%8B/c/c++/2014/01/12/clang-static-analyzer.html" class="read-next-link"></a>
+            <section>
+                <span>Clang Static Analyzer - 静态代码分析工具</span>
+                <p>Clang Static Analyzer 和 cppcheck 一样，都是代码静态检查工具。它是 clang 编...</p>
+            </section>
+            
+        </div>
+        
+    </section>
+    
+</section>
+
+<footer class="g-footer">
+    <section>xsyr的独立博客 © 2017</section>
+    <section>Powered by <a href="//jekyllrb.com">Jekyll</a> | <a href="https://github.com/kaeyleo/jekyll-theme-H2O">Theme H2O</a></section>
+</footer>
+
+<script src="/assets/js/social-share.min.js"></script>
+<script>
+    socialShare('.social-share', {
+        sites: ['wechat','weibo','douban','twitter'],
+        wechatQrcodeTitle: "分享到微信朋友圈",
+        wechatQrcodeHelper: '<p>扫码后点击右上角</p><p>将本文分享至朋友圈</p>'
+    });
+</script>
+<script>
+/**
+*  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+*  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables*/
+/*
+var disqus_config = function () {
+this.page.url = PAGE_URL;  // Replace PAGE_URL with your page's canonical URL variable
+this.page.identifier = PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+};
+*/
+(function() { // DON'T EDIT BELOW THIS LINE
+var d = document, s = d.createElement('script');
+/*写入自己的disqus信息*/
+s.src = '#';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<script src="https://cdn.staticfile.org/jquery/3.2.1/jquery.min.js"></script>
+<script src="/assets/js/prism.js"></script>
+<script src="/assets/js/index.min.js"></script>
+</body>
+</html>

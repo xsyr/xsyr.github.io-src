@@ -1,0 +1,24 @@
+---
+layout: post
+title: "1588 OC 模型"
+date: 2014-01-10 20:02
+comments: true
+categories: 编程
+---
+
+最近负责实现项目的 1588 时钟同步方案，实现 OC （普通时钟）的功能。1588可以提供
+ns 级别的时钟，在通信行业普遍应用。OC 通过收集 Announce 报文，之后利用 BMC 算法
+选出最佳主时钟。在收到主时钟的 Sync 报文时，FPGA 会打上 t2 然后才传给 Linux 网络
+模块，这样就收到了 t1, t2。接着 OC 发 Req 报文给主时钟，此时 FPGA 记下 t3,主时钟
+返回 Delay_Resp 时带上 t4。通过 t1, t2, t3, t4 就可以算出时差和网络延时：   
+与主时钟的时差 = `((t2 - t1) - (t4 - t3))/2`     
+网络延时       = `((t2 - t1) + (t4 - t3))/2`     
+
+OC 只包含一个 Port，State 及其子类构成了 Slave-Only OC 的状态机。
+
+Iface 是收发 1588 报文的接口。1588 可以支持 以太网二层组播包，IP 单播 和 IP 组播。
+分别对应 LinkLayerMulticastIface, IpUnicastIface 和 IpMulticastIface。
+<!-- more -->
+
+OC 模型：   
+![pic](/assets/img/1588-Model.png)

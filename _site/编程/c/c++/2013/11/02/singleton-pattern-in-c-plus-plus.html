@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>singleton pattern in c++ - xsyr的独立博客</title>
+    <meta name="author"  content="黄成林">
+    <meta name="description" content="singleton pattern in c++">
+    <meta name="keywords"  content="">
+    <!-- Open Graph -->
+    <meta property="og:title" content="singleton pattern in c++ - xsyr的独立博客">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://xsyr.github.io/%E7%BC%96%E7%A8%8B/c/c++/2013/11/02/singleton-pattern-in-c-plus-plus.html">
+    <meta property="og:description" content="经验源于爱折腾, 喜欢折腾各种新鲜玩意儿。">
+    <meta property="og:site_name" content="xsyr的独立博客">
+    <link rel="shortcut icon" href="/assets/img/favicon.ico">
+    <link rel="stylesheet" href="//cdn.staticfile.org/normalize/6.0.0/normalize.min.css">
+    <link rel="stylesheet" href="//at.alicdn.com/t/font_roc50gemkxpw4s4i.css">
+    <link rel="stylesheet" href="/assets/css/github-markdown.css">
+    <link rel="stylesheet" href="/assets/css/prism.css">
+    <link rel="stylesheet" href="/assets/css/share.min.css">
+    <link rel="stylesheet" href="/assets/css/app.min.css">
+</head>
+<body>
+    <!--[if lt IE 10]>
+<div class="alert-danger" role="alert">你的浏览器实在太太太旧了，放学别走，升级完浏览器再说！<a target="_blank" class="alert-link" href="http://browsehappy.com">立即升级</a></div>
+<![endif]-->
+<input id="nm-switch" type="hidden" value="false">
+
+<header class="g-header">
+    <div class="g-logo">
+        <a href="/"></a>
+    </div>
+    <i id="menu-toggle" class="iconfont icon-menu"></i>
+    <nav class="g-nav">
+        <ul>
+            
+            <li><a href="/">home</a></li>
+            
+            <li><a href="/tags.html">tags</a></li>
+            
+        </ul>
+    </nav>
+</header>
+
+
+<header class="g-banner post-header post-pattern-circuitBoard bgcolor-default post-no-cover" data-theme="default">
+    <div class="post-wrapper">
+        <div class="post-tags">
+            
+        </div>
+        <h1>singleton pattern in c++</h1>
+        <div class="post-meta">
+            <span class="post-meta-item"><i class="iconfont icon-author"></i><a href="https://xsyr.github.io" target="_blank" rel="author">黄成林</a></></span>
+            <time class="post-meta-item" datetime="13-11-02"><i class="iconfont icon-date"></i>02 Nov 2013</time>
+        </div>
+    </div>
+    
+</header>
+
+<div class="post-content">
+    
+    <article class="markdown-body">
+        <h2 id="特点">特点</h2>
+
+<ol>
+  <li>延迟实例化</li>
+  <li>多线程安全</li>
+  <li>使用 C++11 新特性（final, std::call_once )</li>
+  <li>因为使用到 std::call_once ，所以链接时必须添加 -pthread</li>
+  <li>不能在由 main 函数引导的流程之外的地方调用 Instance() 函数</li>
+  <li>使用前必须在 源文件 中调用 INIT_SINGLETON_CLEANER 初始化单实例的 ‘清洁工’。
+ 单实例模式可以使用静态实例的方式实现，但这样做无法实现 延迟实例化 的需求。
+ 单实例的生命周期通常和应用程序的周期一致，但是为了能让 内存泄漏检测工具 正确
+ 地检测到内存泄漏，所以必须要做好收尾工作。（如果是使用 Valgrind 的话可以不用
+ 清理）</li>
+</ol>
+
+<!-- more -->
+
+<p>include_code singleton.hpp</p>
+
+<h2 id="例子">例子</h2>
+
+<div class="language-c++ highlighter-rouge"><pre class="highlight"><code><span class="cp">#include &lt;stdlib.h&gt;
+</span>
+<span class="cp">#include &lt;iostream&gt;
+#include &lt;memory&gt;
+#include &lt;vector&gt;
+</span>
+<span class="cp">#include "singleton.hpp"
+</span>
+<span class="c1">/// 单实例必须是 final 类，否则使用时会出现异常。
+</span><span class="k">class</span> <span class="nc">Sth</span> <span class="n">final</span> <span class="o">:</span> <span class="k">public</span> <span class="n">infra</span><span class="o">::</span><span class="n">Singleton</span><span class="o">&lt;</span><span class="n">Sth</span><span class="o">&gt;</span> <span class="p">{</span>
+ <span class="k">public</span><span class="o">:</span>
+  <span class="kt">void</span> <span class="n">Do</span><span class="p">()</span> <span class="p">{</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">"Doing ...."</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+  <span class="p">}</span>
+
+ <span class="c1">/// 应该将构造函数和析构函数隐藏起来，
+</span> <span class="c1">/// 防止无意中又创建了其他实例。
+</span> <span class="nl">private:</span>
+  <span class="n">Sth</span><span class="p">()</span> <span class="p">{</span>
+    <span class="c1">/// ...
+</span>    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">"Hi"</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+  <span class="p">}</span>
+
+  <span class="o">~</span><span class="n">Sth</span><span class="p">()</span> <span class="p">{</span>
+    <span class="c1">/// ...
+</span>    <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">"Bye"</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+  <span class="p">}</span>
+
+  <span class="c1">/// 因为析构函数已经隐藏起来了，而收尾工作需要调用析构函数
+</span>  <span class="k">friend</span> <span class="n">infra</span><span class="o">::</span><span class="n">Singleton</span><span class="o">&lt;</span><span class="n">Sth</span><span class="o">&gt;</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="c1">/// 必须的，因为需要做收尾工作
+</span><span class="n">INIT_SINGLETON_CLEANER</span><span class="p">;</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span><span class="n">argv</span><span class="p">[])</span>
+<span class="p">{</span>
+  <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">argc</span><span class="p">;</span>
+  <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">argv</span><span class="p">;</span>
+
+  <span class="n">Sth</span><span class="o">::</span><span class="n">Instance</span><span class="p">().</span><span class="n">Do</span><span class="p">();</span>
+
+  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre>
+</div>
+
+    </article>
+    
+    <div class="social-share-wrapper">
+        <div class="social-share"></div>
+    </div>
+    
+</div>
+
+<section class="author-detail">
+    <section class="post-footer-item author-card">
+        <div class="avatar">
+            <img src="/assets/img/profile.jpg" alt="">
+        </div>
+        <div class="author-name" rel="author">黄成林</div>
+        <div class="bio">
+            <p>后端开发者，热爱技术，简单爱折腾</p>
+        </div>
+        
+        <ul class="sns-links">
+            
+            <li>
+                <a href="//github.com/xsyr" target="_blank">
+                    <i class="iconfont icon-github"></i>
+                </a>
+            </li>
+            
+        </ul>
+        
+    </section>
+    <section class="post-footer-item read-next">
+        
+        <div class="read-next-item">
+            <a href="/linux/2014/01/05/mixpkg.html" class="read-next-link"></a>
+            <section>
+                <span>miXpkg - DEB 打包程序</span>
+                <p>在使用 Raspberry Pi 时，有时候需要安装从源码编译的软件，但有时又不能直接在 RPi 上直接编译，那只...</p>
+            </section>
+            
+        </div>
+        
+         
+        <div class="read-next-item">
+            <a href="/%E7%BC%96%E7%A8%8B/c/c++/2013/10/30/include-what-you-use.html" class="read-next-link"></a>
+            <section>
+                <span>使用 I.W.Y.U 整理头文件引用</span>
+                <p>C++ 的复杂性导致其编译速度极慢，特别是项目的代码量很大时尤为明显。通常为了提高编译速度往往是无所不用其极，pi...</p>
+            </section>
+            
+        </div>
+        
+    </section>
+    
+</section>
+
+<footer class="g-footer">
+    <section>xsyr的独立博客 © 2017</section>
+    <section>Powered by <a href="//jekyllrb.com">Jekyll</a> | <a href="https://github.com/kaeyleo/jekyll-theme-H2O">Theme H2O</a></section>
+</footer>
+
+<script src="/assets/js/social-share.min.js"></script>
+<script>
+    socialShare('.social-share', {
+        sites: ['wechat','weibo','douban','twitter'],
+        wechatQrcodeTitle: "分享到微信朋友圈",
+        wechatQrcodeHelper: '<p>扫码后点击右上角</p><p>将本文分享至朋友圈</p>'
+    });
+</script>
+<script>
+/**
+*  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+*  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables*/
+/*
+var disqus_config = function () {
+this.page.url = PAGE_URL;  // Replace PAGE_URL with your page's canonical URL variable
+this.page.identifier = PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+};
+*/
+(function() { // DON'T EDIT BELOW THIS LINE
+var d = document, s = d.createElement('script');
+/*写入自己的disqus信息*/
+s.src = '#';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<script src="https://cdn.staticfile.org/jquery/3.2.1/jquery.min.js"></script>
+<script src="/assets/js/prism.js"></script>
+<script src="/assets/js/index.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>color logger - xsyr的独立博客</title>
+    <meta name="author"  content="黄成林">
+    <meta name="description" content="color logger">
+    <meta name="keywords"  content="">
+    <!-- Open Graph -->
+    <meta property="og:title" content="color logger - xsyr的独立博客">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://xsyr.github.io/c/c++/2014/01/07/color-logger.html">
+    <meta property="og:description" content="经验源于爱折腾, 喜欢折腾各种新鲜玩意儿。">
+    <meta property="og:site_name" content="xsyr的独立博客">
+    <link rel="shortcut icon" href="/assets/img/favicon.ico">
+    <link rel="stylesheet" href="//cdn.staticfile.org/normalize/6.0.0/normalize.min.css">
+    <link rel="stylesheet" href="//at.alicdn.com/t/font_roc50gemkxpw4s4i.css">
+    <link rel="stylesheet" href="/assets/css/github-markdown.css">
+    <link rel="stylesheet" href="/assets/css/prism.css">
+    <link rel="stylesheet" href="/assets/css/share.min.css">
+    <link rel="stylesheet" href="/assets/css/app.min.css">
+</head>
+<body>
+    <!--[if lt IE 10]>
+<div class="alert-danger" role="alert">你的浏览器实在太太太旧了，放学别走，升级完浏览器再说！<a target="_blank" class="alert-link" href="http://browsehappy.com">立即升级</a></div>
+<![endif]-->
+<input id="nm-switch" type="hidden" value="false">
+
+<header class="g-header">
+    <div class="g-logo">
+        <a href="/"></a>
+    </div>
+    <i id="menu-toggle" class="iconfont icon-menu"></i>
+    <nav class="g-nav">
+        <ul>
+            
+            <li><a href="/">home</a></li>
+            
+            <li><a href="/tags.html">tags</a></li>
+            
+        </ul>
+    </nav>
+</header>
+
+
+<header class="g-banner post-header post-pattern-circuitBoard bgcolor-default post-no-cover" data-theme="default">
+    <div class="post-wrapper">
+        <div class="post-tags">
+            
+        </div>
+        <h1>color logger</h1>
+        <div class="post-meta">
+            <span class="post-meta-item"><i class="iconfont icon-author"></i><a href="https://xsyr.github.io" target="_blank" rel="author">黄成林</a></></span>
+            <time class="post-meta-item" datetime="14-01-07"><i class="iconfont icon-date"></i>07 Jan 2014</time>
+        </div>
+    </div>
+    
+</header>
+
+<div class="post-content">
+    
+    <article class="markdown-body">
+        <p>写了个简单的 logger，方便调试。</p>
+
+<div class="language-c++ highlighter-rouge"><pre class="highlight"><code>
+<span class="cp">#ifndef OAM_PTP_LOGGER_H_
+#define OAM_PTP_LOGGER_H_
+</span>
+<span class="k">namespace</span> <span class="n">log</span>
+<span class="p">{</span>
+
+<span class="k">enum</span> <span class="n">LogLevel</span> <span class="p">{</span>
+  <span class="n">kDebug</span><span class="p">,</span>
+  <span class="n">kInfo</span><span class="p">,</span>
+  <span class="n">kWarn</span><span class="p">,</span>
+  <span class="n">kError</span><span class="p">,</span>
+  <span class="n">kFatal</span>
+<span class="p">};</span>
+
+<span class="k">class</span> <span class="nc">Logger</span> <span class="p">{</span>
+ <span class="k">public</span><span class="o">:</span>
+  <span class="n">Logger</span><span class="p">()</span> <span class="p">{</span> <span class="p">}</span>
+  <span class="k">virtual</span> <span class="kt">void</span> <span class="n">Write</span><span class="p">(</span><span class="n">LogLevel</span> <span class="n">level</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">format</span><span class="p">,</span> <span class="p">...)</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+  <span class="k">virtual</span> <span class="o">~</span><span class="n">Logger</span><span class="p">()</span> <span class="p">{</span> <span class="p">}</span>
+
+ <span class="k">private</span><span class="o">:</span>
+  <span class="n">Logger</span><span class="p">(</span><span class="k">const</span> <span class="n">Logger</span><span class="o">&amp;</span> <span class="n">logger</span><span class="p">);</span>
+  <span class="kt">void</span> <span class="k">operator</span><span class="o">=</span><span class="p">(</span><span class="k">const</span> <span class="n">Logger</span><span class="o">&amp;</span> <span class="n">logger</span><span class="p">);</span>
+<span class="p">};</span>
+
+<span class="cm">/**
+ * @brief Do nothing.
+ */</span>
+<span class="k">class</span> <span class="nc">DummyLogger</span> <span class="o">:</span> <span class="k">public</span> <span class="n">Logger</span> <span class="p">{</span>
+ <span class="k">public</span><span class="o">:</span>
+  <span class="k">virtual</span> <span class="kt">void</span> <span class="n">Write</span><span class="p">(</span><span class="n">LogLevel</span> <span class="n">level</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">format</span><span class="p">,</span> <span class="p">...)</span> <span class="p">{</span>
+    <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">level</span><span class="p">;</span>
+    <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">format</span><span class="p">;</span>
+  <span class="p">}</span>
+
+<span class="p">};</span>
+
+<span class="p">}</span>
+
+<span class="cp">#endif </span><span class="cm">/* end of include guard: OAM_PTP_LOGGER_H_ */</span><span class="cp">
+</span>
+</code></pre>
+</div>
+
+<!-- more -->
+
+<div class="language-c++ highlighter-rouge"><pre class="highlight"><code>
+<span class="k">namespace</span> <span class="n">log</span>
+<span class="p">{</span>
+
+<span class="k">class</span> <span class="nc">ColorLogger</span> <span class="o">:</span> <span class="k">public</span> <span class="n">ptp</span><span class="o">::</span><span class="n">log</span><span class="o">::</span><span class="n">Logger</span> <span class="p">{</span>
+ <span class="k">public</span><span class="o">:</span>
+  <span class="k">virtual</span> <span class="kt">void</span> <span class="n">Write</span><span class="p">(</span><span class="n">ptp</span><span class="o">::</span><span class="n">log</span><span class="o">::</span><span class="n">LogLevel</span> <span class="n">level</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">format</span><span class="p">,</span> <span class="p">...)</span> <span class="p">{</span>
+
+    <span class="kt">time_t</span> <span class="n">now</span> <span class="o">=</span> <span class="n">time</span><span class="p">(</span><span class="nb">NULL</span><span class="p">);</span>
+    <span class="k">struct</span> <span class="n">tm</span> <span class="o">*</span><span class="n">ptm</span> <span class="o">=</span> <span class="n">localtime</span><span class="p">(</span><span class="o">&amp;</span><span class="n">now</span><span class="p">);</span>
+    <span class="kt">char</span> <span class="n">buf</span><span class="p">[</span><span class="mi">64</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">};</span>
+    <span class="n">snprintf</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">buf</span><span class="p">),</span> <span class="s">"[%02d-%02d-%02d %02d:%02d:%02d]"</span><span class="p">,</span>
+             <span class="p">(</span><span class="n">ptm</span><span class="o">-&gt;</span><span class="n">tm_year</span> <span class="o">+</span> <span class="mi">1900</span><span class="p">)</span> <span class="o">/</span> <span class="mi">100</span><span class="p">,</span>
+             <span class="n">ptm</span><span class="o">-&gt;</span><span class="n">tm_mon</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+             <span class="n">ptm</span><span class="o">-&gt;</span><span class="n">tm_mday</span><span class="p">,</span>
+             <span class="n">ptm</span><span class="o">-&gt;</span><span class="n">tm_hour</span><span class="p">,</span>
+             <span class="n">ptm</span><span class="o">-&gt;</span><span class="n">tm_min</span><span class="p">,</span>
+             <span class="n">ptm</span><span class="o">-&gt;</span><span class="n">tm_sec</span><span class="p">);</span>
+
+    <span class="k">switch</span><span class="p">(</span><span class="n">level</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">case</span> <span class="n">ptp</span><span class="p">:</span><span class="o">:</span><span class="n">log</span><span class="o">::</span><span class="n">kDebug</span><span class="o">:</span> <span class="k">this</span><span class="o">-&gt;</span><span class="n">Debug</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="n">format</span><span class="p">);</span> <span class="k">break</span><span class="p">;</span>
+      <span class="k">case</span> <span class="n">ptp</span><span class="p">:</span><span class="o">:</span><span class="n">log</span><span class="o">::</span><span class="n">kInfo</span><span class="o">:</span>  <span class="k">this</span><span class="o">-&gt;</span><span class="n">Info</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="n">format</span><span class="p">);</span>  <span class="k">break</span><span class="p">;</span>
+      <span class="k">case</span> <span class="n">ptp</span><span class="p">:</span><span class="o">:</span><span class="n">log</span><span class="o">::</span><span class="n">kWarn</span><span class="o">:</span>  <span class="k">this</span><span class="o">-&gt;</span><span class="n">Warn</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="n">format</span><span class="p">);</span>  <span class="k">break</span><span class="p">;</span>
+      <span class="k">case</span> <span class="n">ptp</span><span class="p">:</span><span class="o">:</span><span class="n">log</span><span class="o">::</span><span class="n">kError</span><span class="o">:</span> <span class="k">this</span><span class="o">-&gt;</span><span class="n">Error</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="n">format</span><span class="p">);</span> <span class="k">break</span><span class="p">;</span>
+      <span class="k">case</span> <span class="n">ptp</span><span class="p">:</span><span class="o">:</span><span class="n">log</span><span class="o">::</span><span class="n">kFatal</span><span class="o">:</span> <span class="k">this</span><span class="o">-&gt;</span><span class="n">Fatal</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="n">format</span><span class="p">);</span> <span class="k">break</span><span class="p">;</span>
+    <span class="p">};</span>
+
+
+    <span class="kt">va_list</span> <span class="n">args</span><span class="p">;</span>
+    <span class="n">va_start</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">format</span><span class="p">);</span>
+    <span class="n">vprintf</span><span class="p">(</span><span class="k">this</span><span class="o">-&gt;</span><span class="n">buffer_</span><span class="p">,</span> <span class="n">args</span><span class="p">);</span>
+    <span class="n">va_end</span><span class="p">(</span><span class="n">args</span><span class="p">);</span>
+
+  <span class="p">}</span>
+
+ <span class="k">private</span><span class="o">:</span>
+
+  <span class="kt">void</span> <span class="n">Debug</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">time</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">format</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">sprintf</span><span class="p">(</span><span class="k">this</span><span class="o">-&gt;</span><span class="n">buffer_</span><span class="p">,</span>
+            <span class="s">"</span><span class="se">\033</span><span class="s">[1;37m[Debug] %s </span><span class="se">\033</span><span class="s">[00;00m</span><span class="se">\033</span><span class="s">[0;37m%s</span><span class="se">\033</span><span class="s">[0m</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span>
+            <span class="n">time</span><span class="p">,</span>
+            <span class="n">format</span><span class="p">);</span>
+  <span class="p">}</span>
+  <span class="kt">void</span> <span class="n">Info</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">time</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">format</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">sprintf</span><span class="p">(</span><span class="k">this</span><span class="o">-&gt;</span><span class="n">buffer_</span><span class="p">,</span>
+            <span class="s">"</span><span class="se">\033</span><span class="s">[1;32m[Info ] %s </span><span class="se">\033</span><span class="s">[00;00m</span><span class="se">\033</span><span class="s">[0;32m%s</span><span class="se">\033</span><span class="s">[0m</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span>
+            <span class="n">time</span><span class="p">,</span>
+            <span class="n">format</span><span class="p">);</span>
+  <span class="p">}</span>
+  <span class="kt">void</span> <span class="n">Warn</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">time</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">format</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">sprintf</span><span class="p">(</span><span class="k">this</span><span class="o">-&gt;</span><span class="n">buffer_</span><span class="p">,</span>
+            <span class="s">"</span><span class="se">\033</span><span class="s">[1;33m[Warn ] %s </span><span class="se">\033</span><span class="s">[00;00m</span><span class="se">\033</span><span class="s">[0;33m%s</span><span class="se">\033</span><span class="s">[0m</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span>
+           <span class="n">time</span><span class="p">,</span>
+           <span class="n">format</span><span class="p">);</span>
+  <span class="p">}</span>
+  <span class="kt">void</span> <span class="n">Error</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">time</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">format</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">sprintf</span><span class="p">(</span><span class="k">this</span><span class="o">-&gt;</span><span class="n">buffer_</span><span class="p">,</span>
+            <span class="s">"</span><span class="se">\033</span><span class="s">[1;31m[Error] %s </span><span class="se">\033</span><span class="s">[00;00m</span><span class="se">\033</span><span class="s">[0;31m%s</span><span class="se">\033</span><span class="s">[0m</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span>
+            <span class="n">time</span><span class="p">,</span>
+            <span class="n">format</span><span class="p">);</span>
+  <span class="p">}</span>
+  <span class="kt">void</span> <span class="n">Fatal</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">time</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">format</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">sprintf</span><span class="p">(</span><span class="k">this</span><span class="o">-&gt;</span><span class="n">buffer_</span><span class="p">,</span>
+            <span class="s">"</span><span class="se">\033</span><span class="s">[1;31m[Fatal] %s </span><span class="se">\033</span><span class="s">[00;00m</span><span class="se">\033</span><span class="s">[0;31m%s</span><span class="se">\033</span><span class="s">[00;00m</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span>
+            <span class="n">time</span><span class="p">,</span>
+            <span class="n">format</span><span class="p">);</span>
+  <span class="p">}</span>
+
+  <span class="kt">char</span> <span class="n">buffer_</span><span class="p">[</span><span class="mi">1024</span><span class="p">];</span>
+<span class="p">};</span>
+
+<span class="p">}</span> <span class="c1">/// namespace log
+</span></code></pre>
+</div>
+
+    </article>
+    
+    <div class="social-share-wrapper">
+        <div class="social-share"></div>
+    </div>
+    
+</div>
+
+<section class="author-detail">
+    <section class="post-footer-item author-card">
+        <div class="avatar">
+            <img src="/assets/img/profile.jpg" alt="">
+        </div>
+        <div class="author-name" rel="author">黄成林</div>
+        <div class="bio">
+            <p>后端开发者，热爱技术，简单爱折腾</p>
+        </div>
+        
+        <ul class="sns-links">
+            
+            <li>
+                <a href="//github.com/xsyr" target="_blank">
+                    <i class="iconfont icon-github"></i>
+                </a>
+            </li>
+            
+        </ul>
+        
+    </section>
+    <section class="post-footer-item read-next">
+        
+        <div class="read-next-item">
+            <a href="/%E7%BC%96%E7%A8%8B/2014/01/10/1588-design-model.html" class="read-next-link"></a>
+            <section>
+                <span>1588 OC 模型</span>
+                <p>最近负责实现项目的 1588 时钟同步方案，实现 OC （普通时钟）的功能。1588可以提供ns 级别的时钟，在通...</p>
+            </section>
+            
+        </div>
+        
+         
+        <div class="read-next-item">
+            <a href="/%E7%BC%96%E7%A8%8B/2014/01/05/ptpproxy.html" class="read-next-link"></a>
+            <section>
+                <span>ptpproxy - 转发 1588 二层组播报文</span>
+                <p>最近负责实现 1588 时钟同步客户端（OC 时钟功能），由于设计方案的原因，OC 和 主时钟之间有一个三层路由器...</p>
+            </section>
+            
+        </div>
+        
+    </section>
+    
+</section>
+
+<footer class="g-footer">
+    <section>xsyr的独立博客 © 2017</section>
+    <section>Powered by <a href="//jekyllrb.com">Jekyll</a> | <a href="https://github.com/kaeyleo/jekyll-theme-H2O">Theme H2O</a></section>
+</footer>
+
+<script src="/assets/js/social-share.min.js"></script>
+<script>
+    socialShare('.social-share', {
+        sites: ['wechat','weibo','douban','twitter'],
+        wechatQrcodeTitle: "分享到微信朋友圈",
+        wechatQrcodeHelper: '<p>扫码后点击右上角</p><p>将本文分享至朋友圈</p>'
+    });
+</script>
+<script>
+/**
+*  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+*  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables*/
+/*
+var disqus_config = function () {
+this.page.url = PAGE_URL;  // Replace PAGE_URL with your page's canonical URL variable
+this.page.identifier = PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+};
+*/
+(function() { // DON'T EDIT BELOW THIS LINE
+var d = document, s = d.createElement('script');
+/*写入自己的disqus信息*/
+s.src = '#';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<script src="https://cdn.staticfile.org/jquery/3.2.1/jquery.min.js"></script>
+<script src="/assets/js/prism.js"></script>
+<script src="/assets/js/index.min.js"></script>
+</body>
+</html>

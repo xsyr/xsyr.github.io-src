@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Atom + Github Pages markdown 插件安装 - xsyr的独立博客</title>
+    <title>ptpproxy - 转发 1588 二层组播报文 - xsyr的独立博客</title>
     <meta name="author"  content="黄成林">
-    <meta name="description" content="Atom + Github Pages markdown 插件安装">
-    <meta name="keywords"  content="markdown">
+    <meta name="description" content="ptpproxy - 转发 1588 二层组播报文">
+    <meta name="keywords"  content="">
     <!-- Open Graph -->
-    <meta property="og:title" content="Atom + Github Pages markdown 插件安装 - xsyr的独立博客">
+    <meta property="og:title" content="ptpproxy - 转发 1588 二层组播报文 - xsyr的独立博客">
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://xsyr.github.io/markdown/2017/09/06/atom-markdown-plugins.html">
+    <meta property="og:url" content="https://xsyr.github.io/%E7%BC%96%E7%A8%8B/2014/01/05/ptpproxy.html">
     <meta property="og:description" content="经验源于爱折腾, 喜欢折腾各种新鲜玩意儿。">
     <meta property="og:site_name" content="xsyr的独立博客">
     <link rel="shortcut icon" href="/assets/img/favicon.ico">
@@ -44,69 +44,39 @@
 </header>
 
 
-<header class="g-banner post-header post-pattern-circuitBoard bgcolor-default " data-theme="default">
+<header class="g-banner post-header post-pattern-circuitBoard bgcolor-default post-no-cover" data-theme="default">
     <div class="post-wrapper">
         <div class="post-tags">
-             
-            
-            <a href="tags#markdown" class="post-tag">markdown</a>
-            
             
         </div>
-        <h1>Atom + Github Pages markdown 插件安装</h1>
+        <h1>ptpproxy - 转发 1588 二层组播报文</h1>
         <div class="post-meta">
             <span class="post-meta-item"><i class="iconfont icon-author"></i><a href="https://xsyr.github.io" target="_blank" rel="author">黄成林</a></></span>
-            <time class="post-meta-item" datetime="17-09-06"><i class="iconfont icon-date"></i>06 Sep 2017</time>
+            <time class="post-meta-item" datetime="14-01-05"><i class="iconfont icon-date"></i>05 Jan 2014</time>
         </div>
     </div>
-    
-    <div class="filter"></div>
-    <div class="post-cover" style="background: url('/assets/img/atom-markdown-editor-effect.png') center no-repeat; background-size: cover;">
     
 </header>
 
 <div class="post-content">
     
-    <h2 class="post-subtitle"></h2>
-    
     <article class="markdown-body">
-        <p>在 VIM 里写 markdown 真的不太方便，特别是要贴图的时。Atom 的几个插件可以帮助我们快捷的写
-markdown文档。这里介绍几个：</p>
-<ol>
-  <li><code class="highlighter-rouge">markdown-preview-plus</code> 用于在 Atom 生成预览</li>
-  <li><code class="highlighter-rouge">markdown-imgage-paste</code> 用于在 Atom 中<code class="highlighter-rouge">ctrl+v</code> 粘贴图片</li>
-  <li><code class="highlighter-rouge">language-markdown</code>     用于编程语言高亮</li>
-  <li><code class="highlighter-rouge">markdown-scroll-sync</code>  用于同步滚动预览窗口</li>
-  <li><code class="highlighter-rouge">markdown-table-editor</code>  用于编辑表格</li>
-</ol>
+        <p>最近负责实现 1588 时钟同步客户端（OC 时钟功能），由于设计方案的原因，OC 和 主时钟
+之间有一个三层路由器，导致1588二层组播包无法通过。于是写了个程序，专门转发 1588 二层组播包。</p>
 
-<p>Github Pages 是用 jekyll 生成的静态网页，所以会遵循jekyll的布局，通常 markdown 文档
-保存在 <code class="highlighter-rouge">_post</code> 目录下，生成的静态网页在 <code class="highlighter-rouge">_site</code> 下，markdown 中引用的图片一般放到
-jekyll根目录的 <code class="highlighter-rouge">assets/img</code> 中，所以本文用到的 <code class="highlighter-rouge">markdown-preview-plus</code> 和 <code class="highlighter-rouge">markdown-imgage-paste</code> 做了适当修改，一是 ctrl+v 粘贴的图片自动保存到<code class="highlighter-rouge">assets/img</code>下，
-<code class="highlighter-rouge">markdown-preview-plus</code>生成预览时会到 <code class="highlighter-rouge">assets/img</code>下找到对应的图片。
-效果图
-<img src="/assets/img/atom-markdown-editor-effect.png" alt="atom-markdown-editor-effect" /></p>
+<p><img src="https://github.com/xsyr/ptpproxy/raw/master/screenshot1.jpg" alt="pic" /></p>
 
-<h1 id="1-安装-markdown-preview-plus--markdown-imgage-paste">1. 安装 markdown-preview-plus + markdown-imgage-paste</h1>
+<p>原理很简单，使用 RAW socket 监听接口拿到原始 1588 以太网报文，并将其转发到另一个接口上。如上图：   <br />
+监听 br0 收到的 1588二层组播包，并转发到 eth0。
+同理，监听 eth0 收到的 1588二层组播包，并转发到 br0。</p>
 
-<div class="language-shell highlighter-rouge"><pre class="highlight"><code><span class="gp">$ </span>apm install xsyr/markdown-img-paste
-<span class="gp">$ </span>apm install xsyr/markdown-preview-plus
-</code></pre>
-</div>
+<!-- more -->
 
-<h2 id="markdown-preview-plus-开启-jekyll-支持功能">markdown-preview-plus 开启 jekyll 支持功能</h2>
-<p><img src="/assets/img/markdown-preview-plus-enable.png" alt="markdown-preview-plus-enable" /></p>
+<p>include_code ptpproxy.c</p>
 
-<h2 id="markdown-imgage-paste-开启-jekyll-支持功能">markdown-imgage-paste 开启 jekyll 支持功能</h2>
-<p><img src="/assets/img/markdown-imgage-paste-enable.png" alt="markdown-imgage-paste-enable" />
-其中<code class="highlighter-rouge">Jekyll image folder</code>为相对jekyll根目录用于保存图片的文件夹.</p>
+<hr />
 
-<h1 id="2-安装其他插件">2. 安装其他插件</h1>
-<div class="language-shell highlighter-rouge"><pre class="highlight"><code><span class="gp">$ </span>apm install language-markdown
-<span class="gp">$ </span>apm install markdown-scroll-sync
-<span class="gp">$ </span>apm install markdown-table-editor
-</code></pre>
-</div>
+<p><a href="https://github.com/xinsuiyuer/ptpproxy">ptpproxy 源码</a></p>
 
     </article>
     
@@ -139,12 +109,21 @@ jekyll根目录的 <code class="highlighter-rouge">assets/img</code> 中，所�
     </section>
     <section class="post-footer-item read-next">
         
+        <div class="read-next-item">
+            <a href="/c/c++/2014/01/07/color-logger.html" class="read-next-link"></a>
+            <section>
+                <span>color logger</span>
+                <p>写了个简单的 logger，方便调试。</p>
+            </section>
+            
+        </div>
+        
          
         <div class="read-next-item">
-            <a href="/%E7%BC%96%E7%A8%8B/c/c++/2014/02/14/clang-static-analyzer-with-jenkins-on-linux.html" class="read-next-link"></a>
+            <a href="/linux/2014/01/05/mixpkg.html" class="read-next-link"></a>
             <section>
-                <span>clang static analyzer with jenkins on linux</span>
-                <p>clang 是一个优秀的编译器，基于 clang 的 clang static anayler 静态检查工具也是开...</p>
+                <span>miXpkg - DEB 打包程序</span>
+                <p>在使用 Raspberry Pi 时，有时候需要安装从源码编译的软件，但有时又不能直接在 RPi 上直接编译，那只...</p>
             </section>
             
         </div>

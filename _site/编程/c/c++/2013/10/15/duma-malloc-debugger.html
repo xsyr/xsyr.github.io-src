@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>使用 DUMA 检测 C++ 内存违规访问和内存泄漏 - xsyr的独立博客</title>
+    <meta name="author"  content="黄成林">
+    <meta name="description" content="使用 DUMA 检测 C++ 内存违规访问和内存泄漏">
+    <meta name="keywords"  content="">
+    <!-- Open Graph -->
+    <meta property="og:title" content="使用 DUMA 检测 C++ 内存违规访问和内存泄漏 - xsyr的独立博客">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://xsyr.github.io/%E7%BC%96%E7%A8%8B/c/c++/2013/10/15/duma-malloc-debugger.html">
+    <meta property="og:description" content="经验源于爱折腾, 喜欢折腾各种新鲜玩意儿。">
+    <meta property="og:site_name" content="xsyr的独立博客">
+    <link rel="shortcut icon" href="/assets/img/favicon.ico">
+    <link rel="stylesheet" href="//cdn.staticfile.org/normalize/6.0.0/normalize.min.css">
+    <link rel="stylesheet" href="//at.alicdn.com/t/font_roc50gemkxpw4s4i.css">
+    <link rel="stylesheet" href="/assets/css/github-markdown.css">
+    <link rel="stylesheet" href="/assets/css/prism.css">
+    <link rel="stylesheet" href="/assets/css/share.min.css">
+    <link rel="stylesheet" href="/assets/css/app.min.css">
+</head>
+<body>
+    <!--[if lt IE 10]>
+<div class="alert-danger" role="alert">你的浏览器实在太太太旧了，放学别走，升级完浏览器再说！<a target="_blank" class="alert-link" href="http://browsehappy.com">立即升级</a></div>
+<![endif]-->
+<input id="nm-switch" type="hidden" value="false">
+
+<header class="g-header">
+    <div class="g-logo">
+        <a href="/"></a>
+    </div>
+    <i id="menu-toggle" class="iconfont icon-menu"></i>
+    <nav class="g-nav">
+        <ul>
+            
+            <li><a href="/">home</a></li>
+            
+            <li><a href="/tags.html">tags</a></li>
+            
+        </ul>
+    </nav>
+</header>
+
+
+<header class="g-banner post-header post-pattern-circuitBoard bgcolor-default post-no-cover" data-theme="default">
+    <div class="post-wrapper">
+        <div class="post-tags">
+            
+        </div>
+        <h1>使用 DUMA 检测 C++ 内存违规访问和内存泄漏</h1>
+        <div class="post-meta">
+            <span class="post-meta-item"><i class="iconfont icon-author"></i><a href="https://xsyr.github.io" target="_blank" rel="author">黄成林</a></></span>
+            <time class="post-meta-item" datetime="13-10-15"><i class="iconfont icon-date"></i>15 Oct 2013</time>
+        </div>
+    </div>
+    
+</header>
+
+<div class="post-content">
+    
+    <article class="markdown-body">
+        <p>D.U.M.A 的全称是 Detect Unintended Memory Access，它是 Electric Fence 的加强版，
+可参考《<a href="http://xinsuiyuer.github.io/blog/2013/10/13/use-electric-fence-to-detect-heap-overruns-and-underruns/">使用 Electric Fence 检测内存越界操作</a>》。
+它添加了如下特性：</p>
+
+<ol>
+  <li>能 Hook malloc(), call(), memalign(), strdup(), operator new, operator new[],free(), operator delete 和 operator delete[]。</li>
+  <li>能够精确的检测到违规方位的指令，并支持使用调试器定位它在源代码中的位置。</li>
+  <li>能够检测到不匹配的内存分配与释放函数，如：使用 malloc() 分配但却使用 delete 删除。</li>
+  <li>可以检测内存泄漏。这是 Electric Fence 不支持的。</li>
+</ol>
+
+<p>DUMA 的<a href="http://duma.sourceforge.net/">文档</a>有些地方并没有同步更新。</p>
+
+<h2 id="安装">安装</h2>
+
+<p>下载 <a href="https://sourceforge.net/projects/duma/">DUMA</a>源码并解压，进入源文件目录编译
+并安装：</p>
+<div class="language-shell highlighter-rouge"><pre class="highlight"><code><span class="gp">$ </span>gmake
+<span class="gp">$ </span>gmake install <span class="nv">libdir</span><span class="o">=</span>/usr/lib64
+</code></pre>
+</div>
+
+<p>如果是 32bit 系统，则不需要指定 <strong>libdir</strong> 目录，默认会安装到 <strong>/usr/lib</strong>。DUMA 包含
+了两个重要的文件 <strong>libduma.a</strong> 和 <strong>libduma.so.0.0.0</strong>，使用方法和 Electric Fence 类似。</p>
+
+<h2 id="高级应用">高级应用</h2>
+
+<p>DUMA 和 Electric Fence 一样，同样支持通过变量来控制其行为，只不过比 Electric Fence
+要多。</p>
+
+<ol>
+  <li>
+    <h3 id="duma_alignment">DUMA_ALIGNMENT</h3>
+    <p>对应 <strong>EF_ALIGNMENT</strong>。</p>
+  </li>
+  <li>
+    <h3 id="duma_protect_below">DUMA_PROTECT_BELOW</h3>
+    <p>对应 <strong>EF_PROTECT_BELOW</strong>。</p>
+  </li>
+  <li>
+    <h3 id="duma_fill">DUMA_FILL</h3>
+    <p>对应 <strong>EL_FILE</strong>，默认为 0xFF。</p>
+  </li>
+  <li>
+    <h3 id="duma_slackfill">DUMA_SLACKFILL</h3>
+    <p>DUMA内部分配内存时以页为单位，如果申请的内存大小小于页大小，则未使用的空间(“无人区”)
+会填充 <strong>DUMA_SLACKFILL</strong> 指定的值。默认为 0xAA。</p>
+  </li>
+  <li>
+    <h3 id="duma_check_freq">DUMA_CHECK_FREQ</h3>
+    <p>对于啥面提到的”无人区”，这个值指定检查这个区域的频率，n 代表多少次内存分配或释放
+时就去检查；如果为 1 则表示每次内存分配和释放都回去检查；默认为 0 ，表示只有在
+内存释放的时候才去检查。频率越高性能损耗越大。</p>
+  </li>
+  <li>
+    <h3 id="duma_allow_malloc_0">DUMA_ALLOW_MALLOC_0</h3>
+    <p>对应 <strong>EF_ALLOW_MALLOC_0</strong>。</p>
+  </li>
+  <li>
+    <h3 id="duma_malloc_0_strategy">DUMA_MALLOC_0_STRATEGY</h3>
+    <p>当 malloc(0) 的参数为 0 时的返回值策略:
+0 - 和 DUMA_ALLOW_MALLOC_0 = 0时的行为一样，会终止应用程序。
+1 - 返回 NULL
+2 - 总是返回指向某一个受保护的页(Page)的指针，这样在使用时和 0 一样。
+3 - 返回一个只想受保护的页中间地址。</p>
+  </li>
+  <li>
+    <h3 id="duma_new_0_strategy">DUMA_NEW_0_STRATEGY</h3>
+    <p>当 <strong>new</strong> 的大小参数为 0 时的返回值策略:
+2 - 和 <strong>DUMA_MALLOC_0_STRATEGY</strong> 为2时一样。
+3 - 和 <strong>DUMA_MALLOC_0_STRATEGY</strong> 为3时一样。</p>
+  </li>
+  <li>
+    <h3 id="duma_protect_free">DUMA_PROTECT_FREE</h3>
+    <p>其作用和 <strong>EF_PROJECT_FREE</strong>一样。默认为 -1，表示已经开启。如果为 n(n &gt; 0)，
+则表示允许空闲内存的总大小为 n(KB)。</p>
+  </li>
+  <li>
+    <h3 id="duma_skipcount_init">DUMA_SKIPCOUNT_INIT</h3>
+    <p>DUMA通常在第一次分配内存是初始化。但在一些系统上可能会和pthread或者其他库
+相冲突。为了使 DUMA 在这种场景下能够正常工作，可以通过设置这个变量控制 DUMA 在
+多少次内存分配操作之后再初始化。</p>
+  </li>
+  <li>
+    <h3 id="duma_report_all_leaks">DUMA_REPORT_ALL_LEAKS</h3>
+    <p>DUMA 通常只会报告那些能查找对应文件名和行号的导致内存泄漏的语句。如果此值为 1
+则会报告所有的内存泄漏错误。默认为 0。</p>
+  </li>
+  <li>
+    <h3 id="duma_malloc_failexit">DUMA_MALLOC_FAILEXIT</h3>
+    <p>很多程序并没有检查内存分配失败的情况，这会导致在失败的情况下会延后才会体现出来。
+设置为正数表示失败时就终止程序。</p>
+  </li>
+  <li>
+    <h3 id="duma_max_alloc">DUMA_MAX_ALLOC</h3>
+    <p>表示最多能分配的总的内存大小。如果为正数表示最大能分配 n(KB)。默认为 -1,表示无限制。</p>
+  </li>
+  <li>
+    <h3 id="duma_free_access">DUMA_FREE_ACCESS</h3>
+    <p>这个选项可以帮助调试器捕捉到内存释放的动作。如果此值为非0,则表示开启。默认关闭。</p>
+  </li>
+  <li>
+    <h3 id="duma_show_alloc">DUMA_SHOW_ALLOC</h3>
+    <p>是否在每次进行内存分配和释放时都打印到终端。这有助于检查内存的分配和释放的情况。
+默认关闭。</p>
+  </li>
+  <li>
+    <h3 id="duma_suppress_atexit">DUMA_SUPPRESS_ATEXIT</h3>
+    <p>是否在程序退出时忽略 DUMA 自定义的 exit 函数。这个函数用于检查内存泄漏，通常情况下
+不应该跳过。默认为禁止忽略。</p>
+  </li>
+  <li>
+    <h3 id="duma_disable_banner">DUMA_DISABLE_BANNER</h3>
+    <p>禁止打印 DUMA 启动信息。默认不禁止。</p>
+  </li>
+  <li>
+    <h3 id="duma_output_debug">DUMA_OUTPUT_DEBUG</h3>
+    <p>将所有 DUMA 信息打印到调试终端。只在 Windows 下有效并且默认关闭。</p>
+  </li>
+  <li>
+    <h3 id="duma_output_stdout">DUMA_OUTPUT_STDOUT</h3>
+    <p>将信息打印到 stdout。默认关闭。</p>
+  </li>
+  <li>
+    <h3 id="duma_output_stderr">DUMA_OUTPUT_STDERR</h3>
+    <p>将信息打印到 stderr。默认开启。</p>
+  </li>
+  <li>
+    <h3 id="duma_output_file">DUMA_OUTPUT_FILE</h3>
+    <p>将信息打印到指定文件中。默认关闭。</p>
+  </li>
+  <li>
+    <h3 id="duma_output_stacktrace">DUMA_OUTPUT_STACKTRACE</h3>
+    <p>打印所有泄漏内存的分配语句的调用栈，只在 Windows 下有效并默认关闭。需要用到映射文件。</p>
+  </li>
+  <li>
+    <h3 id="duma_output_stacktrace_mapfile">DUMA_OUTPUT_STACKTRACE_MAPFILE</h3>
+    <p>只在Windows 下有效，指向由编译器产生的映射文件。</p>
+  </li>
+</ol>
+
+<hr />
+
+<h2 id="内存泄漏检测">内存泄漏检测</h2>
+
+<ol>
+  <li>
+    <h3 id="对-c-写的代码进行内存泄漏检查">对 C 写的代码进行内存泄漏检查</h3>
+    <p>为了收集内存分配的语句所在的位置，DUMA 需要对 malloc() 等函数进行“Hook”，这是用
+宏实现的，所以需要包含头文件 **#include <duma.h>**。并链接 **libduma.a** 和
+**pthread** 库。</duma.h></p>
+  </li>
+</ol>
+
+<div class="language-shell highlighter-rouge"><pre class="highlight"><code><span class="gp">$ </span>g++ -g -O0 heap-corruption.cc -o heapC -Wl,-Bstatic,-lduma -Wl,-Bdynamic -pthread
+</code></pre>
+</div>
+
+<p><strong>-Bdynamic</strong> 和 <strong>-Bstatic</strong> 使用参考《<a href="http://xinsuiyuer.github.io/blog/2013/10/14/mix-static-and-dynamic-linking/">mix static and dynamic linking</a>》。</p>
+
+<ol>
+  <li>
+    <h3 id="对-c-写的代码进行内存泄漏检查-1">对 C++ 写的代码进行内存泄漏检查</h3>
+    <p>将 **#include <duma.h>** 改为 **#include <dumapp.h>** 即可。对于 C++，DUMA 还自定义
+了new, new\[\], delete 和 delete\[\]操作符。</dumapp.h></duma.h></p>
+  </li>
+</ol>
+
+<div class="language-c++ highlighter-rouge"><pre class="highlight"><code><span class="kt">void</span> <span class="o">*</span> <span class="n">DUMA_CDECL</span> <span class="k">operator</span> <span class="k">new</span><span class="p">(</span><span class="n">DUMA_SIZE_T</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="p">,</span> <span class="kt">int</span><span class="p">)</span> <span class="k">throw</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">bad_alloc</span><span class="p">);</span>
+<span class="kt">void</span> <span class="o">*</span> <span class="n">DUMA_CDECL</span> <span class="k">operator</span> <span class="k">new</span><span class="p">(</span><span class="n">DUMA_SIZE_T</span><span class="p">,</span> <span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">nothrow_t</span> <span class="o">&amp;</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="p">,</span> <span class="kt">int</span><span class="p">)</span> <span class="k">throw</span><span class="p">();</span>
+<span class="kt">void</span>   <span class="n">DUMA_CDECL</span> <span class="k">operator</span> <span class="k">delete</span><span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="p">,</span> <span class="kt">int</span><span class="p">)</span> <span class="k">throw</span><span class="p">();</span>
+<span class="kt">void</span>   <span class="n">DUMA_CDECL</span> <span class="k">operator</span> <span class="k">delete</span><span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="p">,</span> <span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">nothrow_t</span> <span class="o">&amp;</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="p">,</span> <span class="kt">int</span><span class="p">)</span> <span class="k">throw</span><span class="p">();</span>
+
+<span class="kt">void</span> <span class="o">*</span> <span class="n">DUMA_CDECL</span> <span class="k">operator</span> <span class="k">new</span><span class="p">[](</span><span class="n">DUMA_SIZE_T</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="p">,</span> <span class="kt">int</span><span class="p">)</span> <span class="k">throw</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">bad_alloc</span><span class="p">);</span>
+<span class="kt">void</span> <span class="o">*</span> <span class="n">DUMA_CDECL</span> <span class="k">operator</span> <span class="k">new</span><span class="p">[](</span><span class="n">DUMA_SIZE_T</span><span class="p">,</span> <span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">nothrow_t</span> <span class="o">&amp;</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="p">,</span> <span class="kt">int</span><span class="p">)</span> <span class="k">throw</span><span class="p">();</span>
+<span class="kt">void</span>   <span class="n">DUMA_CDECL</span> <span class="k">operator</span> <span class="k">delete</span><span class="p">[](</span><span class="kt">void</span> <span class="o">*</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="p">,</span> <span class="kt">int</span><span class="p">)</span> <span class="k">throw</span><span class="p">();</span>
+<span class="kt">void</span>   <span class="n">DUMA_CDECL</span> <span class="k">operator</span> <span class="k">delete</span><span class="p">[](</span><span class="kt">void</span> <span class="o">*</span><span class="p">,</span> <span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">nothrow_t</span> <span class="o">&amp;</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="p">,</span> <span class="kt">int</span><span class="p">)</span> <span class="k">throw</span><span class="p">();</span>
+
+</code></pre>
+</div>
+
+<hr />
+
+<h2 id="参考链接">参考链接</h2>
+<p><a href="http://duma.sourceforge.net/">D.U.M.A. - Detect Unintended Memory Access</a></p>
+
+    </article>
+    
+    <div class="social-share-wrapper">
+        <div class="social-share"></div>
+    </div>
+    
+</div>
+
+<section class="author-detail">
+    <section class="post-footer-item author-card">
+        <div class="avatar">
+            <img src="/assets/img/profile.jpg" alt="">
+        </div>
+        <div class="author-name" rel="author">黄成林</div>
+        <div class="bio">
+            <p>后端开发者，热爱技术，简单爱折腾</p>
+        </div>
+        
+        <ul class="sns-links">
+            
+            <li>
+                <a href="//github.com/xsyr" target="_blank">
+                    <i class="iconfont icon-github"></i>
+                </a>
+            </li>
+            
+        </ul>
+        
+    </section>
+    <section class="post-footer-item read-next">
+        
+        <div class="read-next-item">
+            <a href="/linux/%E7%BC%96%E7%A8%8B/2013/10/21/use-strace-plus-to-strace-system-call-and-signal.html" class="read-next-link"></a>
+            <section>
+                <span>使用 strace+ 跟踪系统调用和信号</span>
+                <p>最近遇到了奇怪的现象，一个进程的物理内存使用量为 7MB 左右，但分配了250MB左右的地址空间，程序中没有映射大...</p>
+            </section>
+            
+        </div>
+        
+         
+        <div class="read-next-item">
+            <a href="/%E7%BC%96%E7%A8%8B/c/c++/2013/10/14/mix-static-and-dynamic-linking.html" class="read-next-link"></a>
+            <section>
+                <span>mix static and dynamic linking</span>
+                <p>混合的使用静态库与动态库有时候很有用，比如第三方库只提供了静态库但你不想所有库都使用静态的，所以不能使用 -sta...</p>
+            </section>
+            
+        </div>
+        
+    </section>
+    
+</section>
+
+<footer class="g-footer">
+    <section>xsyr的独立博客 © 2017</section>
+    <section>Powered by <a href="//jekyllrb.com">Jekyll</a> | <a href="https://github.com/kaeyleo/jekyll-theme-H2O">Theme H2O</a></section>
+</footer>
+
+<script src="/assets/js/social-share.min.js"></script>
+<script>
+    socialShare('.social-share', {
+        sites: ['wechat','weibo','douban','twitter'],
+        wechatQrcodeTitle: "分享到微信朋友圈",
+        wechatQrcodeHelper: '<p>扫码后点击右上角</p><p>将本文分享至朋友圈</p>'
+    });
+</script>
+<script>
+/**
+*  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+*  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables*/
+/*
+var disqus_config = function () {
+this.page.url = PAGE_URL;  // Replace PAGE_URL with your page's canonical URL variable
+this.page.identifier = PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+};
+*/
+(function() { // DON'T EDIT BELOW THIS LINE
+var d = document, s = d.createElement('script');
+/*写入自己的disqus信息*/
+s.src = '#';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<script src="https://cdn.staticfile.org/jquery/3.2.1/jquery.min.js"></script>
+<script src="/assets/js/prism.js"></script>
+<script src="/assets/js/index.min.js"></script>
+</body>
+</html>
