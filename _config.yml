@@ -3,7 +3,7 @@ title: 'xsyr的独立博客'
 description: '经验源于爱折腾, 喜欢折腾各种新鲜玩意儿。'
 keyword: 'C/C++, Lua, Go, Linux, IoT, 硬件.'
 url: 'https://xsyr.github.io' # your host
-baseurl: '' 
+baseurl: ''
 
 # Navigation links
 nav:
@@ -14,7 +14,7 @@ nav:
 author: '黄成林'
 nickname: '立方'
 bio: '后端开发者，热爱技术，简单爱折腾'
-avatar: 'assets/img/profile.jpg'
+avatar: '/assets/img/profile.jpg'
 
 # Search
 search: true
@@ -59,4 +59,5 @@ kramdown:
 RSS: true
 
 # Plugins
-plugins: [jekyll-paginate]
+# gems: [jekyll-paginate]
+Plugins: [jekyll-paginate]
