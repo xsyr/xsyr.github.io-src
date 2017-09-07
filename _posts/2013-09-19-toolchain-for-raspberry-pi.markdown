@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "toolchain for Raspberry Pi"
+title: "Toolchain for Raspberry Pi"
 date: 2013-09-19 13:41
 categories: Linux Raspberryi
 tags: IoT RaspberryPi
