@@ -6,6 +6,7 @@ comments: true
 categories: C/C++
 ---
 
+
 写了个简单的 logger，方便调试。
 
 ```c++

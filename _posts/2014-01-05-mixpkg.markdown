@@ -23,6 +23,6 @@ apt-get 对软件包进行管理。
 $ make
 $ miXpkg -s /path/to/sysroot -o /path/to/place/copied/installed/files -n package-name [args pass to make, e.g. install var1=val1]
 ```
-这样就会在 /path/to/place/copied/installed/ 下生成 package-name.deb 安装包。
+这样就会在 ``/path/to/place/copied/installed/`` 下生成 package-name.deb 安装包。
 
 [miXpkg 源码](https://github.com/xinsuiyuer/miXpkg)

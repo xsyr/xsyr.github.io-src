@@ -19,7 +19,6 @@ if [ ! -d $SITE_DIR ]; then
     mv $GIT_DIR $SITE_DIR
 fi
 
-jekyll clean
 jekyll b
 
 cd $SITE_DIR
