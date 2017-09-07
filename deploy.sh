@@ -26,7 +26,7 @@ cd $SITE_DIR
 
 pwd
 
-git add .
+git remote set-url origin git+ssh://git@github.com/xsyr.github.io.git
 git commit -am 'update'
 git push
 
