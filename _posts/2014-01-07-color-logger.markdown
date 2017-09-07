@@ -9,7 +9,7 @@ categories: C/C++
 
 写了个简单的 logger，方便调试。
 
-```c++
+```cpp
 
 #ifndef OAM_PTP_LOGGER_H_
 #define OAM_PTP_LOGGER_H_
@@ -56,7 +56,7 @@ class DummyLogger : public Logger {
 
 <!-- more -->
 
-```c++
+```cpp
 
 namespace log
 {

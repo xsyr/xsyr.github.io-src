@@ -13,7 +13,7 @@ categories: 编程 C/C++
 这时候能体现出混合使用动静态库的优势。ld 链接程序提供了
 两个选项用于指定所引用的库是静态的还是动态的。
 
-```shell
+```bash
 $ ld --help
   ...
   -Bdynamic, -dy, -call_shared
@@ -27,7 +27,7 @@ $ ld --help
 例如：如果想在链接的时候使用  duma 的静态库，其他的库则默认使用动态库。
 则可以这样编译：
 
-```shell
+```bash
 $ g++ -g -O0 heap-corruption.cc -o heapC -Wl,-Bstatic,-lduma -Wl,-Bdynamic -pthread
 ```
 

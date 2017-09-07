@@ -10,7 +10,7 @@ getconf 是 glibc 带的一个命令，可以用来查看使用 sysconf，pathco
 设置的各种变量和路径的值。例如：PATH 路径，OS 字大小 LONG_BIT，内存页大小 PAGESIZE
 等变量。
 
-```shell
+```bash
 $ getconf PAGESIZE
 4096
 $ getconf -a
@@ -18,7 +18,7 @@ $ getconf -a
 
 <!-- more -->
 
-```shell
+```bash
 LINK_MAX                           65000
 _POSIX_LINK_MAX                    65000
 MAX_CANON                          255

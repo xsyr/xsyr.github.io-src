@@ -25,7 +25,8 @@ include_code singleton.hpp
 
 ## 例子 ##
 
-```c++
+{% raw %}
+``` cpp
 #include <stdlib.h>
 
 #include <iostream>
@@ -71,3 +72,4 @@ int main(int argc, char *argv[])
   return 0;
 }
 ```
+{% endraw %}

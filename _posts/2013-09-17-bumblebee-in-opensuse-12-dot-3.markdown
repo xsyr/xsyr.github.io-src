@@ -23,14 +23,14 @@ Linux，然后.....没下文了。
 
 ## 创建 bumblebee 和 video 用户组
 
-```shell
+```bash
 $ groupadd bumblebee
 $ groupadd video
 $ usermod -a -G bumblebee,videl  [你的用户名]
 $ groups
 ```
 一定要确保自己在 bumblebee 和 video 组里。可以用下面的命令查看:    
-```shell
+```bash
 $ groups
 ```
 
@@ -38,7 +38,7 @@ $ groups
 
 ## 添加 Overman79's 源 ##
 
-```shell
+```bash
 $ zypper ar http://download.opensuse.org/repositories/home:/Overman79:/Laptop/openSUSE_12.3/ Overman79
 ```
 
@@ -46,7 +46,7 @@ $ zypper ar http://download.opensuse.org/repositories/home:/Overman79:/Laptop/op
 
 ## 安装 dkms dkms-nvidia  dkms-bbswitch ##
 
-```shell
+```bash
 $ zypper in dkms dkms-nvidia dkms-bbswitch bumblebee primus x11-video-nvidia
 ```
 
@@ -57,7 +57,7 @@ $ zypper in dkms dkms-nvidia dkms-bbswitch bumblebee primus x11-video-nvidia
 
 ## 开启 dkms 和 bumblebeed 服务 ##
 
-```shell
+```bash
 $ systemctl enable dkms
 $ systemctl enable bumblebeed
 ```
@@ -70,7 +70,7 @@ dkms 全称 **Dynamic Kernel Module Support**，
 
 ## 看看N卡关闭了没 ##
 
-```shell
+```bash
 $ cat /proc/acpi/bbswitch
 $ primusrun --status
 ```
@@ -78,7 +78,7 @@ $ primusrun --status
 第一个命令应该显示 **OFF**，第二个命令应该显示 **Discrete video card is off**.   
 要是不行的话执行下面的命令：    
 
-```shell
+```bash
 $ rmmod nvidia
 $ tee /proc/acpi/bbswitch <<<OFF
 ```
@@ -89,7 +89,7 @@ $ tee /proc/acpi/bbswitch <<<OFF
 
 ## 把 nvidia.ko 列入黑名单，重新生成新的 initrd ##
 
-```shell
+```bash
 $ cd /etc/modprobe.d
 $ echo 'blacklist nvidia' >> 50-blacklist.conf
 $ echo 'blacklist nvidia' > 50-nvidia.conf
@@ -103,7 +103,7 @@ $ echo 'options bbswitch load_state=0 unload_state=0' > 50-bbswitch.conf
 打开 ``/etc/sysconfig/kernel`` ，把所有和 nvidia 相关的都注释掉。
 
 
-```shell
+```bash
 $ mkinitrd
 ```
 

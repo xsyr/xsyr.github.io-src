@@ -22,7 +22,7 @@ syntastic，vcscommand，doxygen-support 等大臣辅佐，写起代码来有滋
 使用源码编译安装 Vim 的好处是能够用上最新的补丁。安装很简单：
 
 #### 获取源码 ####
-```shell
+```bash
 $ cd $vimsrc
 $ hg clone https://vim.googlecode.com/hg/ vim
 $ cd vim
@@ -31,7 +31,7 @@ $ hg update
 ```
 
 #### 编译安装 ####
-```shell
+```bash
 $ make uninstall
 $ make distclean
 $ make uninstall
@@ -59,7 +59,7 @@ $ make clean
 #### 配置 Vim 参数 ####
 
 配置缩进，高亮搜索，展开 tab 等参数：
-```shell
+```bash
 $ gvim ~/.vimrc
 ```
 写入：
@@ -81,11 +81,13 @@ set laststatus=2
 set nocompatible
 set showcmd
 ```
+{% endraw %}
 
 ## 安装 NeoBundle 管理各种插件 ##
 
 根据 [NeoBundle](https://github.com/Shougo/neobundle.vim) 的 README 步骤即可。
 **.vimrc** 中写入：
+{% raw %}
 ```vim
 " neobundle {{{
 set nocompatible               " Be iMproved
@@ -125,7 +127,7 @@ NeoBundle 'git://github.com/Valloric/YouCompleteMe.git'
 ```
 
 启动 Vim clone YouCompleteMe 的源码，进入源码的路径执行编译命令：
-```shell
+```bash
 $ cd ~/.vim/bundle/YouCompleteMe/
 $ mkdir build
 $ cd build

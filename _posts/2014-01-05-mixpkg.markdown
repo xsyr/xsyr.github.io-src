@@ -19,7 +19,7 @@ apt-get 对软件包进行管理。
 使用方法：对源码进行 make 之后，使用 miXpkg 代替 make install，miXpkg 会先启用一个
 线程监视安装目录，然后再执行 make install 命令。
 
-```shell
+```bash
 $ make
 $ miXpkg -s /path/to/sysroot -o /path/to/place/copied/installed/files -n package-name [args pass to make, e.g. install var1=val1]
 ```

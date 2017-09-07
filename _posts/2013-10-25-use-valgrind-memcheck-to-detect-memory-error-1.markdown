@@ -29,12 +29,12 @@ Valgrind 是非侵入式的，所以使用它可以完成很多的检测任务�
 ## 安装 ##
 
 很多 Linux 发行版的源都有已经编译好的二进制包，直接安装即可。openSUSE下的安装：
-```shell
+```bash
 $ zypper install valgrind
 ```
 
 也可以[源码](http://valgrind.org/downloads/)安装：
-```shell
+```bash
 $ ./configure; make; sudo make install
 ```
 
@@ -85,7 +85,7 @@ Valgrind 会对系统调用的所有参数做检查，包括：
 而且，不能同时与其他的 allcator 同时使用，否则会导致 Valgrind 无法正常正常工作。
 
 Valgrind 的调用格式如下：
-```shell
+```bash
 valgrind --tool=memcheck [valgrind-options] your-prog [your-prog-options]
 ```
 

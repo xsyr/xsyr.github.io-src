@@ -56,6 +56,12 @@ highlighter: rouge
 kramdown:
   input: GFM
 
+  syntax_highlighter: rouge
+
+  syntax_highlighter_opts:
+    # Rouge Options › https://github.com/jneen/rouge#full-options
+    css_class: 'highlight line-numbers '
+
 RSS: true
 
 # Plugins

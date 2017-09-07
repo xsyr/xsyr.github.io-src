@@ -13,7 +13,7 @@ realloc，calloc和free 的调用进行监视，统计相应大小内存块的�
 
 ### 简单的例子 ###
 
-```c++
+```cpp
 #include <stdlib.h>
 
 #include <memory>
@@ -48,7 +48,7 @@ int main(int argc, char *argv[])
 ```
 
 在 bash 运行之后会打印出程序的内存使用情况。
-```shell
+```bash
 $ g++ -g main.cpp -o app
 $ ./app
 ```

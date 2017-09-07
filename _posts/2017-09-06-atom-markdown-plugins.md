@@ -25,7 +25,7 @@ jekyll根目录的 `assets/img` 中，所以本文用到的 `markdown-preview-pl
 
 # 1. 安装 markdown-preview-plus + markdown-imgage-paste
 
-```shell
+```bash
 $ apm install xsyr/markdown-img-paste
 $ apm install xsyr/markdown-preview-plus
 ```
@@ -39,7 +39,7 @@ $ apm install xsyr/markdown-preview-plus
 
 
 # 2. 安装其他插件
-```shell
+```bash
 $ apm install language-markdown
 $ apm install markdown-scroll-sync
 $ apm install markdown-table-editor

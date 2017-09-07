@@ -11,7 +11,7 @@ calloc() 和 free() ，对分配和释放内存的操作进行配对检测，如
 会记录导致内存泄漏的分配函数调用所在的位置，并将记录保存到环境变量 MALLOC_TRACE
 指定的文件中，然后就可以使用 mtrace 命令来查看日志了。
 
-```shell
+```bash
 $ mtrace path/to/your/app path/to/your/log-file
 ```
 
@@ -26,7 +26,7 @@ $ mtrace path/to/your/app path/to/your/log-file
 **mtrace** 分析日志文件时会用到程序的 符号信息，所以在编译是需要添加 **-g -O0**
 的编译选项。
 
-```shell
+```bash
 $ MALLOC_TRACE=path/to/your/log-file  path/to/your/app
 ```
 
@@ -35,7 +35,7 @@ $ MALLOC_TRACE=path/to/your/log-file  path/to/your/app
 
 
 
-```c++
+```cpp
 #include <stdlib.h>
 #include <mcheck.h>
 
@@ -82,7 +82,7 @@ int main(int argc, char *argv[])
 
 ```
 
-```shell
+```bash
 $ g++ -std=c++11 -g -O0 -o app main.cc
 $ MALLOC_TRACE=test-mtrace.dat ./app
 ```
@@ -91,7 +91,7 @@ $ MALLOC_TRACE=test-mtrace.dat ./app
 
 ## 分析日志文件 ##
 
-```shell
+```bash
 $ mtrace ./app test-mtrace.dat
 
 Memory not freed:

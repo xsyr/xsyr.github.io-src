@@ -21,7 +21,7 @@ categories: 编程 C/C++
 `$(SRC)/llvm/tools/clang/tools/scan-view` 目录下。
 
 可以把这两个目录添加到 PATH 路径下，也可以放到 ～/bin 下。
-```shell
+```bash
 $ install -d ~/bin/clang-static-analyzer
 $ cp -R $(SRC)/llvm/tools/clang/tools/scan-build \
         $(SRC)/llvm/tools/clang/tools/scan-view ~/bin/clang-static-analyzer
@@ -31,7 +31,7 @@ $ echo 'export PATH="$PATH:$HOME/bin/clang-static-analyzer/scan-build:$HOME/bin/
 ## 使用 ##
 
 ### 编译单个文件 ###
-```shell
+```bash
 $ scan-build gcc -c main.c
 ```
 
@@ -41,7 +41,7 @@ c++-analyzer。它们也是 Perl 写的脚本程序，最终都会调用 `clang 
 
 ### 结合 make 或 configure ###
 
-```shell
+```bash
 $ scan-build ./configure
 $ scan-build make
 ```
@@ -51,7 +51,7 @@ $ scan-build make
 
 ### 结合 CMake 使用 ###
 
-```shell
+```bash
 $ cmake -DCMAKE_C_COMPILER=ccc-analyzer -DCMAKE_CXX_COMPILER=c++-analyzer ..
 ```
 
@@ -68,7 +68,7 @@ int main()
 }
 ```
 
-```shell
+```bash
 $ scan-build --use-analyzer=/usr/bin/clang -enable-checker alpha.security gcc bufferAccessOutOfBounds/bad.c
 scan-build: Using '/usr/bin/clang-3.4' for static analysis
 bufferAccessOutOfBounds/bad.c:6:14: warning: Access out-of-bound array element (buffer overflow)
@@ -92,12 +92,12 @@ scan-build: Run 'scan-view /tmp/scan-build-2014-01-12-144457-32387-1' to examine
 `-enable-checker` 和 `-disable-checker` 开启和禁用具体的 checker 或者 某种类别的
 checker。
 
-```shell
+```bash
 $ scan-build -enable-checker alpha.security.ArrayBoundV2 ... # 启用数组边界检查
 ```
 
 所有支持的 checkers 可以使用如下命令查看：
-```shell
+```bash
 $ clang -cc1 -analyzer-checker-help
   alpha.core.BoolAssignment       Warn about assigning non-{0,1} values to Boolean variables
   alpha.core.CastSize             Check when casting a malloced type T, whether the size is a multiple of the size of T
@@ -132,7 +132,7 @@ $ clang -cc1 -analyzer-checker-help
 
 在使用 `-enable-checker` 或者 `-disable-checker` 时，不需要完整的指定某个 checker 的名称，
 也可以是某一类的，如：    
-```shell
+```bash
 $ scan-build -enable-checker alpha ...
 $ scan-build -enable-checker alpha.security ...
 ```

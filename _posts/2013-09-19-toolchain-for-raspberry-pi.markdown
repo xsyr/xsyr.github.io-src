@@ -27,14 +27,14 @@ tags: IoT RaspberryPi
 
 
 先设置好 toolchain 的安装路径：
-```shell
+```bash
 $ TOOL_CHAIN_DIR=/opt/arm-rpi-toolchain
 $ TARGET_DIR=$TOOL_CHAIN_DIR/arm-rpi-tools
 $ SYSROOT_DIR=$TOOL_CHAIN_DIR/sysroot
 ```
 
 Raspberry Pi 使用的是 arm1176jzf-s CPU，根据其支持的参数设置好需要的编译选项：
-```
+```bash
 $ ARCH=armv6zk
 $ CPU=arm1176jzf-s
 $ WITH_FLOAT=hard
@@ -64,7 +64,7 @@ $ PKGVERSION="arm toolchain for rpi"
 
 Pedora 是基于 Linux 3.6.11 的内核，所以这里安装的 Linux 头文件也是选择 3.6.11 内核。
 先到 [kernel.org](http://kernel.org) 下载 Linux 3.6.11 的源文件，将其解压目录 $linux并安装：
-```shell
+```bash
 $ cd $linux
 $ make headers_check
 $ make ARCH=arm INSTALL_HDR_PATH=$SYSROOT_DIR/usr headers_install
@@ -73,7 +73,7 @@ $ make ARCH=arm INSTALL_HDR_PATH=$SYSROOT_DIR/usr headers_install
 
 ## 安装 gmp  ##
 
-```shell
+```bash
 $ cd $gmp
 $ mkdir build
 $ cd build
@@ -84,7 +84,7 @@ $ make -j8 && make check && make install && make clean
 
 参数 `--disable-shared` 是因为编译 gcc 时会依赖 gmp，不需要生成动态库。
 如果生成动态库，必须将安装目录添加到 **LD_LIBRARY_PATH** 中。
-```shell
+```bash
 $ export LD_LIBRARY_PATH="$TARGET_DIR/lib64:$LD_LIBRARY_PATH"
 ```
 
@@ -94,7 +94,7 @@ $ export LD_LIBRARY_PATH="$TARGET_DIR/lib64:$LD_LIBRARY_PATH"
 
 ## 安装 mpfr ##
 
-```shell
+```bash
 $ cd $mpfr
 $ autoreconf -i
 
@@ -109,7 +109,7 @@ $ make -j8 && make install && make clean
 ```
 
 ## 安装mpc ##
-```shell
+```bash
 $ cd $mpc
 $ autoreconf -i
 
@@ -125,7 +125,7 @@ $ make -j8 && make install && make clean
 ```
 
 ## 安装 isl ##
-```shell
+```bash
 $ cd $isl
 $ ./configure                      \
    --prefix=$TARGET_DIR          \
@@ -138,7 +138,7 @@ $ make -j8 && make install
 
 ## 安装 cloog ##
 
-```shell
+```bash
 $ cd $cloog
 $ mkdir build
 $ cd build
@@ -155,7 +155,7 @@ $ make -j8 && make install
 
 ## 安装 binutils ##
 
-```shell
+```bash
 $ cd $binutils
 $ mkdir build
 $ cd build
@@ -188,7 +188,7 @@ gcc 与 eglibc 是一个鸡生蛋蛋生鸡的问题。编译 eglibc 需要 gcc �
 编译 gcc 的 C++编译器需要 eglibc（libstdc++ 依赖 eglibc）。所以只能先编译生成
 C语言编译器，再编译 eglibc，最后编译 C++编译器。
 
-```shell
+```bash
 $ cd $gcc
 $ mkdir build_mini
 $ cd build_mini
@@ -237,7 +237,7 @@ $ make -j8 && make install
 glibc 不仅实现 ISO C 规定的那些标准函数，还实现了 POSIX，Berkeley Unix，
 SVID 和 XPG标准。Linux 的系统调用也是通过 glibc 封装的。eglibc 和 glibc 是二进制兼容的。
 
-```shell
+```bash
 $ cd $eglibc
 $ mkdir build
 $ cd build
@@ -262,7 +262,7 @@ $ make -j8 && make install install_root=$SYSROOT_DIR
 
 ## 安装 libelf ##
 
-```shell
+```bash
 $ cd $eglibc
 $ mkdir build
 $ cd build
@@ -272,7 +272,7 @@ $ make -j8 && make install
 
 ## 安装 gcc full ##
 
-```shell
+```bash
 $ cd $gcc
 $ mkdir build
 $ cd build
@@ -340,7 +340,7 @@ static const char *GetArmArchForMCpu(StringRef Value) {
 
 执行编译：
 
-```shell
+```bash
 $ cd $clang
 $ mkdir build
 $ cd build

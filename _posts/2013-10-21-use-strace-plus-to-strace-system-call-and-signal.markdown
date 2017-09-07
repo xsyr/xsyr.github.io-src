@@ -21,7 +21,7 @@ strace+ 源码托管在 googlecode 上，它的文档也没有
 
 ## 安装 ##
 
-```shell
+```bash
 $ git clone https://code.google.com/p/strace-plus/
 $ autoreconf -f -i
 $ ./configure
@@ -35,17 +35,17 @@ $ cp strace strace+
 中找到答案(这算是开源软件的特点吧：缺乏文档。); )。
 
 先跑一下官网的 demo，执行
-```shell
+```bash
 $ strace+ -o hello.out ./hello
 ```
 
 ### 解析 hello.out 查看调用栈 ###
-```shell
+```bash
 $ python scripts/pretty_print_strace_out.py hello.out --trace
 ```
 
 ### 或者以树的形式查看调用栈 ###
-```shell
+```bash
 $ python scripts/pretty_print_strace_out.py hello.out --tree
 ```
 
@@ -56,7 +56,7 @@ $ python scripts/pretty_print_strace_out.py hello.out --tree
 ## 使用 ##
 
 strace+ 的使用方式如下：
-```shell
+```bash
 $ strace [-CdffhiqrtttTvVxxy] [-In] [-eexpr]... [-acolumn] [-ofile] [-sstrsize] [-Ppath]... -ppid... / [-D] [-Evar[=val]]... [-uusername] command [args]
 
 $ strace -c[df] [-In] [-eexpr]... [-Ooverhead] [-Ssortby] -ppid... / [-D] [-Evar[=val]]... [-uusername] command [args]

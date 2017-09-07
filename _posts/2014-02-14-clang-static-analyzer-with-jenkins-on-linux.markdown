@@ -90,7 +90,7 @@ Installation directory 填写 scan-build 所在的路径。
 
 三是为 scan-build 准备编译目录和 *Makefile*。这一步是在项目的配置页面的 *`Execute Shell`*
 中添加脚本命令：
-```shell
+```bash
 $ mkdir -p scan-build-dir
 $ cd scan-build-dir
 $ cmake -DCMAKE_C_COMPILER=ccc-analyzer -DCMAKE_CXX_COMPILER=c++-analyzer -DCMAKE_C_FLAGS=" -c " -DCMAKE_CXX_FLAGS=" -c " ..

@@ -12,7 +12,7 @@ categories: 编程
 **状态模式** 显得大财小用，如果使用它则能让代码看起来更优雅。它的用法如下：
 
 1. 比较字符串并返回字符串
-```c++
+```cpp
 return llvm::StringSwitch<const char *>(Value)
   .Cases("arm9e", "arm946e-s", "arm966e-s", "arm968e-s", "arm926ej-s","armv5")
   .Cases("arm10e", "arm10tdmi", "armv5")
@@ -29,7 +29,7 @@ return llvm::StringSwitch<const char *>(Value)
 ```
 
 2. 比较字符串并返回某种类型的值（如：枚举成员）
-```c++
+```cpp
 Color color = StringSwitch<Color>(argv[i])
   .Case("red", Red)
   .Case("orange", Orange)

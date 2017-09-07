@@ -16,7 +16,7 @@ categories: 编程
 
 <!-- more -->
 
-```c++
+```cpp
 
 #include <string>
 #include <iostream>
@@ -123,7 +123,7 @@ MultiSwitchArg 类似 SwitchArg，但它的 getValue 不是返回 boolean，而�
 ### 5. UnlabeledValueArg ###
 
 UnlabeledValueArg\<T> 其实就是 getopt 中的 参数，它也是一个模板类。例如：
-```shell
+```bash
 $ ./app -o ouput -i input 123  45.6  abcd
 ```
 
@@ -138,7 +138,7 @@ UnlabeledMultiArg\<T> 是一个模板类，它在程序中只能出现一次，�
 解析为对应的模板类型，如 UnlabeledMultiArg\<int> 则要求这些参数必须能够解析成
 整型。它的 getValue 返回 **std::vector\<T>**
 
-```shell
+```bash
 $ ./app -o ouput -i input 123  45.6  abcd arg1 arg2 arg3
 ```
 
@@ -153,7 +153,7 @@ $ ./app -o ouput -i input 123  45.6  abcd arg1 arg2 arg3
 
 例如，想让 file 和 url 选项二选一：
 
-```c++
+```cpp
 ValueArg<string>  fileArg("f","file","File name to read",true,"/dev/null", "filename");
 ValueArg<string>  urlArg("u","url","URL to load",true, "http://example.com", "URL");
 
@@ -165,7 +165,7 @@ cmd.parse(argc, argv);
 
 它可以多于两个 option并且是不同类型的 option：   
 
-```c++
+```cpp
 SwitchArg  stdinArg("s", "stdin", "Read from STDIN", false);
 ValueArg<string>  fileArg("f","file","File name to read",true,"/dev/null", "filename");
 ValueArg<string>  urlArg("u","url","URL to load",true, "http://example.com", "URL");
@@ -181,14 +181,14 @@ cmd.xorAdd( xorlist );
 ### 2. 只支持长名的option ###
 
 只要在 option 的构造函数的短名参数中复制空串("")即可：
-```c++
+```cpp
 ValueArg<string>  fileArg("","file","File name",true,"homer","filename");
 
 SwitchArg  caseSwitch("","upperCase","Print in upper case",false);
 ```
 
 ### 3. 为 ValueArg 指定枚举值 ###
-```c++
+```cpp
 vector<string> allowed;
 allowed.push_back("homer");
 allowed.push_back("marge");
@@ -208,7 +208,7 @@ cmd.add( nameArg );
 在 `c++ #include <tclap/CmdLine.h>` 前定义 TCLAP_SETBASE_ZERO
 宏。
 
-```c++
+```cpp
 #define TCLAP_SETBASE_ZERO 1
 
 #include <tclap/CmdLine.h>

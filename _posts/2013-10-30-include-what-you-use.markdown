@@ -21,18 +21,18 @@ C++ 的复杂性导致其编译速度极慢，特别是项目的代码量很大�
 
 ## 安装 ##
 安装前必须安装对应版本的 clang 的开发包。
-```shell
+```bash
 $ zypper install llvm llvm-devel llvm-clang llvm-clang-devel
 ```
 
 下载源码，可以下载打包好的 tar [include-what-you-use-3.3.tar.gz](https://docs.google.com/file/d/0ByBfuBCQcURXQktsT3ZjVmZtWkU/edit)
 或者从 svn 迁出
-```shell
+```bash
 $ svn co http://include-what-you-use.googlecode.com/svn/trunk/ include-what-you-use
 ```
 
 可以单独的编译，也可以作为 LLVM 的一部分。单独编译比较方便。
-```shell
+```bash
 $ mkdir build
 $ cd include-what-you-use/build
 $ cmake -G "Unix Makefiles" -DLLVM_PATH=/usr../include-what-you-use
@@ -42,12 +42,12 @@ $ make
 
 ## 使用 ##
 IWYU 使用很简单，如果有 Makefile，直接
-```shell
+```bash
 $ make -B -k CXX=include-what-you-use
 ```
 
 例子：
-```c++
+```cpp
 #include <stdio.h>
 #include <malloc.h>
 #include <limits.h>
@@ -58,7 +58,7 @@ int foo(void) {
 }
 ```
 
-```shell
+```bash
 $ include-what-you-use bar.cc
 
 bar.cc should add these lines:
@@ -75,7 +75,7 @@ The full include-list for bar.cc
 有时候相同的符号在很多文件中都是定义，可以使用 map 的方法指定引用哪个文件。map 文件
 的方法可以参考文档 [IWYUMappings](https://code.google.com/p/include-what-you-use/wiki/IWYUMappings)。
 然后在运行 IWYU 时指定 map 文件：
-```shell
+```bash
 $ make -B -k CXX=include-what-you-use CFLAGS=" -Xiwyu --mapping_file=mapfile"
 ```
 
@@ -85,7 +85,7 @@ $ make -B -k CXX=include-what-you-use CFLAGS=" -Xiwyu --mapping_file=mapfile"
 
 可以将 IWYU 保存到文件中，之后使用其附带的 fix_includes.py 自动对代码进行修复。
 但应该慎重....    
-```shell
+```bash
 $ make -B -k CXX=include-what-you-use > iwyu.out
 $ fix_includes.py < iwyu.out
 ```

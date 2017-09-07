@@ -12,7 +12,7 @@ categories: 编程 C/C++
 不能直接附加到 Valgrind 的进程中，那就变成调试 Valgrind 了。Valgrind 提供了 GDB
 远程调试机制，可以连接到 Valgrind 实现的 gdbserver 中。步骤如下：
 
-```shell
+```bash
 $ valgrind --tool=memcheck --vgdb=yes --vgdb-error=0 ./heapC
 ```
 
@@ -35,7 +35,7 @@ $ valgrind --tool=memcheck --vgdb=yes --vgdb-error=0 ./heapC
 ```
 
 GDB 通过 vgdb 连接到 Valgrind。
-```shell
+```bash
 $ gdb ./heapC
 (gdb) target remote | vgdb
 ```
@@ -52,7 +52,7 @@ Remote communication error.  Target disconnected.: Connection reset by peer.
 ```
 
 可以通过给 vgdb 提供 pid 选项指定连接到哪个进程：
-```shell
+```bash
 (gdb) target remote | vgdb --pid=17013
 ```
 

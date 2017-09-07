@@ -27,7 +27,7 @@ Electric Fence 使用虚拟内存技术，在 malloc() 分配到的内存块的�
 程序。这时候我们就可以使用调试器（如 gdb）捕获段错误的信号，它结合调试符号信息
 就可以定问到内存违规操作的代码所在的位置。 Electric Fence 安装很简单，在 openSUSE上
 直接执行    
-```shell
+```bash
 $ zypper install ElectricFence
 $ rpm -ql ElectricFence
 /usr/bin/ef
@@ -52,7 +52,7 @@ $ rpm -ql ElectricFence
 或者内存分配器使用，因为大家都是通过 hook 内存分配函数来实现内存检测的。
 
 ### 1. 越下边界写 ###
-```c++
+```cpp
 #include <stdlib.h>
 #include <mcheck.h>
 #include <iostream>
@@ -70,7 +70,7 @@ int main(int argc, char *argv[])
 }
 ```
 
-```shell
+```bash
 $ g++ -g -O0 -o heapC heap-corruption.cc -lefence
 $ gdb -q ./heapC
 (gdb) run
@@ -85,7 +85,7 @@ Program received signal SIGSEGV, Segmentation fault.
 ```
 
 ### 2. 读写已释放的内存块 ###
-```c++
+```cpp
 #include <stdlib.h>
 #include <mcheck.h>
 #include <iostream>
@@ -106,7 +106,7 @@ int main(int argc, char *argv[])
 ```
 
 
-```shell
+```bash
 $ g++ -g -O0 -o heapC heap-corruption.cc -lefence
 $ gdb -q ./heapC
 (gdb) run
@@ -132,7 +132,7 @@ Electric Fence 提供了 **EF_ALIGNMENT**, **EF_PROTECT_BELOW**, **EF_PROTECT_FR
 这个变量控制的是分配到的内存块的对齐大小，它是一个整数值，
 默认是当前OS的字大小。当申请的内存块不是这个值的整数倍时，会向上取整直到满足对齐要求，
 因为内存对其才能让CPU更有效率的工作。可以使用下面的命令查看当前的字大小：
-```shell
+```bash
 $ getconf LONG_BIT
 64
 ```
@@ -148,7 +148,7 @@ array[12], array[13], array[14], array[15] 会发生越界。这样会出现在�
 EF_ALIGNMENT 就变得很有帮助了，可以根据实际情况设置它的值，如 4, 2, 1。这个值越小
 越严格。
 
-```c++
+```cpp
 
 #include <stdlib.h>
 #include <mcheck.h>
@@ -168,7 +168,7 @@ int main(int argc, char *argv[])
 }
 ```
 
-```shell
+```bash
 $ g++ -g -O0 -o heapC heap-corruption.cc -lefence
 $ gdb -q ./heapC
 (gdb) run
@@ -193,7 +193,7 @@ Program received signal SIGSEGV, Segmentation fault.
 EF_PROTECT_BELOW=1 时在 Electric Fence 在内存块的之前也添加一个无法访问的内存页。
 当访问越过内存块上边界的位置时会发生违规访问。这类违规操作很容易破坏掉其位置所在的
 内存块的内容，并且很隐蔽，可能需要很长时间才能以莫名其妙的现象体现出来。
-```c++
+```cpp
 
 #include <stdlib.h>
 #include <mcheck.h>
@@ -213,7 +213,7 @@ int main(int argc, char *argv[])
 }
 ```
 
-```shell
+```bash
 $ g++ -g -O0 -o heapC heap-corruption.cc -lefence
 $ gdb -q ./heapC
 (gdb) run
@@ -241,7 +241,7 @@ heapC 的一部分，所以这块内存被 Electric Fence 放到内存池之后�
 然后使用 Electric Fence 检测时却没有出现问题。如果我们怀疑程序中有访问内存池中的
 空闲内存块的嫌疑，可以将 EF_PROTECT_FREE 设置为 1 来检测这种情况。
 
-```c++
+```cpp
 #include <stdlib.h>
 #include <mcheck.h>
 #include <iostream>
@@ -292,7 +292,7 @@ int main(int argc, char *argv[])
 }
 ```
 
-```shell
+```bash
 $ g++ -g -O0 heap-corruption.cc -o heapC -lefence
 $ ./heapC
 page size: 4096
@@ -314,7 +314,7 @@ Second :  0x7fa94425f800
 检测到错误。但这样做有一个问题，如果程序需要分配很多的内存空间，则会导致物理内存
 资源耗尽或者进车地址空间被分配殆尽。
 
-```shell
+```bash
 $ gdb -q ./heapC
 (gdb) set environment EF_PROTECT_FREE 1
 (gdb) run

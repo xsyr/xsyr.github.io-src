@@ -22,7 +22,7 @@ DUMA 的[文档](http://duma.sourceforge.net/)有些地方并没有同步更新�
 
 下载 [DUMA](https://sourceforge.net/projects/duma/)源码并解压，进入源文件目录编译
 并安装：
-```shell
+```bash
 $ gmake
 $ gmake install libdir=/usr/lib64
 ```
@@ -109,7 +109,7 @@ DUMA 和 Electric Fence 一样，同样支持通过变量来控制其行为，�
 宏实现的，所以需要包含头文件 **#include <duma.h>**。并链接 **libduma.a** 和
 **pthread** 库。
 
-```shell
+```bash
 $ g++ -g -O0 heap-corruption.cc -o heapC -Wl,-Bstatic,-lduma -Wl,-Bdynamic -pthread
 ```
 
@@ -119,7 +119,7 @@ $ g++ -g -O0 heap-corruption.cc -o heapC -Wl,-Bstatic,-lduma -Wl,-Bdynamic -pthr
 将 **#include <duma.h>** 改为 **#include <dumapp.h>** 即可。对于 C++，DUMA 还自定义
 了new, new\[\], delete 和 delete\[\]操作符。
 
-```c++
+```cpp
 void * DUMA_CDECL operator new(DUMA_SIZE_T, const char *, int) throw(std::bad_alloc);
 void * DUMA_CDECL operator new(DUMA_SIZE_T, const std::nothrow_t &, const char *, int) throw();
 void   DUMA_CDECL operator delete(void *, const char *, int) throw();

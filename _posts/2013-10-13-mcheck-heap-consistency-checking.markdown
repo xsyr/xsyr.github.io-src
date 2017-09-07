@@ -22,7 +22,7 @@ mcheck 是 glibc 提供的检测内存一致性的工具，有两种使用方式
 
 <!-- more -->
 
-```c++
+```cpp
 
 #include <stdlib.h>
 #include <mcheck.h>
@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
 }
 ```
 
-```shell
+```bash
 $ g++ -g -O0 -o heapC heap-corruption.cc -lmcheck
 $ MALLOC_CHECK_=2 ./heapC
 block freed twice

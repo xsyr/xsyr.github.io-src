@@ -9,7 +9,7 @@ categories: 编程 C/C++
 [cppcheck](http://cppcheck.sourceforge.net/) 是一个静态代码分析工具。它可以静态检查
 内存泄漏，访问越界等错误，当然不会是很全面和精确的，但不失为程序员的好助手。简单用法：
 
-```shell
+```bash
 $ cppcheck [options] [files or paths]
 $ cppcheck samples/memleak/bad.c
 $ cppcheck samples/
@@ -20,7 +20,7 @@ $ cppcheck samples/
 
 因为要支持 rules，所以安装之前必须安装 PCRE。
 
-```shell
+```bash
 $ cd src
 $ tar -xjf cppcheck-1.63.tar.bz2
 $ cd cppcheck-1.63
@@ -40,7 +40,7 @@ cppcheck 还有一个 gui 版本，是基于 Qt 的。必须先安装
 * qt4-dev-tools
 * qt4-qmake
 
-```shell
+```bash
 $ cd cppcheck-1.63/gui
 $ qmake HAVE_RULES=yes
 $ make -j8

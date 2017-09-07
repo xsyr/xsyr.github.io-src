@@ -12,9 +12,9 @@
 <header class="g-banner post-header {{ site.postPatterns | prepend: 'post-pattern-' }} {{ site.theme-color | prepend: 'bgcolor-' }} {% unless page.cover %}post-no-cover{% endunless %}" data-theme="{{ site.theme-color }}">
     <div class="post-wrapper">
         <div class="post-tags">
-            {% if page.tags.size > 0 %} 
+            {% if page.tags.size > 0 %}
             {% for tag in page.tags  %}
-            <a href="{{ site.baseurl }}tags#{{ tag }}" class="post-tag">{{ tag }}</a>
+            <a href="{{ site.baseurl }}/tags#{{ tag }}" class="post-tag">{{ tag }}</a>
             {% endfor %}
             {% endif %}
         </div>
@@ -47,7 +47,7 @@
 <section class="author-detail">
     <section class="post-footer-item author-card">
         <div class="avatar">
-            <img src="{{ site.baseurl }}{{ site.avatar }}" alt="">
+            <img src="{{ site.baseurl }}/{{ site.avatar }}" alt="">
         </div>
         <div class="author-name" rel="author">{{ site.author }}</div>
         <div class="bio">
@@ -79,7 +79,7 @@
             {% endif %}
         </div>
         {% endif %}
-        {% if page.previous.url %} 
+        {% if page.previous.url %}
         <div class="read-next-item">
             <a href="{{ page.previous.url }}" class="read-next-link"></a>
             <section>
