@@ -24,6 +24,8 @@ jekyll b
 
 cd $SITE_DIR
 
+pwd
+
 git add .
 git commit -am 'update'
 git push
