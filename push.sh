@@ -9,6 +9,7 @@ SRC_DIR=$(dirname $SRC)
 
 cd $SRC_DIR
 
+git add *
 git commit -am 'update'
 git remote set-url origin git+ssh://git@github.com/xsyr/xsyr.github.io-src.git
 git push
