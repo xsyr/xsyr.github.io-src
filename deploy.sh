@@ -23,6 +23,7 @@ jekyll b
 
 cd $SITE_DIR
 
+git add *
 git commit -am 'update'
 git remote set-url origin git+ssh://git@github.com/xsyr/xsyr.github.io.git
 git push
