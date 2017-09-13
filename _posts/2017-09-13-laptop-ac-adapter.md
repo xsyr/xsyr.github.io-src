@@ -1,6 +1,6 @@
 ---
 layout: post
-title: '杂牌笔记本电源适配器'
+title: '杂牌笔记本电源适配器波纹检测'
 subtitle: ''
 date: 2017-09-13 22:11:55 +0800
 categories: 杂记
